@@ -12,7 +12,12 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const team = ["ثابت حسان", "عبدالله عمار", "سالي أحمد", "كوكب معن"];
+const team = [
+  { name: "ثابت حسان", role: "قائد الفريق" },
+  { name: "عبدالله عمار", role: "باحث" },
+  { name: "سالي أحمد", role: "باحث" },
+  { name: "كوكب معن", role: "باحث" },
+];
 
 function Nav() {
   return (
