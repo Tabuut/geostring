@@ -153,8 +153,30 @@
     border-color: var(--color-border);
   }
 
+  html { font-family: 'Cairo', 'Tajawal', sans-serif; }
+
   body {
-    background-color: var(--color-background);
+    background: var(--gradient-hero);
     color: var(--color-foreground);
+    min-height: 100vh;
   }
+
+  .font-display { font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.02em; }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(oklch(0.75 0.13 80 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.75 0.13 80 / 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .glow-gold { box-shadow: var(--shadow-gold); }
+  .glow-cyan { box-shadow: var(--shadow-glow); }
 }
