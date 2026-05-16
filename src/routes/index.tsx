@@ -12,7 +12,12 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const team = ["ثابت حسان", "عبدالله عمار", "سالي أحمد", "كوكب معن"];
+const team = [
+  { name: "ثابت حسان", role: "قائد الفريق" },
+  { name: "عبدالله عمار", role: "باحث" },
+  { name: "سالي أحمد", role: "باحث" },
+  { name: "كوكب معن", role: "باحث" },
+];
 
 function Nav() {
   return (
@@ -192,18 +197,18 @@ function Team() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {team.map((name, i) => (
+          {team.map((member, i) => (
             <div
-              key={name}
+              key={member.name}
               className="group relative p-6 rounded-xl border border-border bg-card/60 hover:border-[var(--gold)]/60 transition overflow-hidden"
             >
               <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-[var(--gold)]/10 group-hover:bg-[var(--gold)]/20 transition" />
               <div className="font-mono text-xs text-[var(--cyan)] mb-3">0{i + 1}</div>
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--gold)] to-[var(--gold-2)] flex items-center justify-center text-background font-bold text-xl mb-4 relative">
-                {name.charAt(0)}
+                {member.name.charAt(0)}
               </div>
-              <div className="font-bold text-lg relative">{name}</div>
-              <div className="text-xs text-muted-foreground mt-1 relative">عضو فريق</div>
+              <div className="font-bold text-lg relative">{member.name}</div>
+              <div className="text-xs text-muted-foreground mt-1 relative">{member.role}</div>
             </div>
           ))}
         </div>
