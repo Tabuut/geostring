@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geostring System — منظومة هندسة الأوتار</title>
+  <meta name="description" content="روبوت رسم بالخيط مؤتمت يعتمد على الهندسة القطبية والتحكم الرقمي CNC.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0a0f1a;
+      --navy-2: #121a2b;
+      --gold: #c9a84c;
+      --gold-2: #e0b85c;
+      --cyan: #5cbdb9;
+      --cyan-2: #3a9e9a;
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .font-display { font-family: 'Barlow Condensed', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    .text-gradient-gold {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .glow-gold { box-shadow: 0 0 30px rgba(201,168,76,0.3); }
+    .glow-cyan { box-shadow: 0 0 30px rgba(92,189,185,0.3); }
+    .bg-grid {
+      background-image: radial-gradient(circle, rgba(201,168,76,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(20px);
+      background: rgba(13,17,23,0.7);
+      border-bottom: 1px solid var(--border);
+    }
+    header .container { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1.125rem;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--bg);
+      font-weight: 800;
+    }
+    .logo span { color: var(--gold); }
+    nav { display: none; }
+    @media (min-width: 768px) {
+      nav { display: flex; align-items: center; gap: 2rem; }
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--gold); }
+
+    /* Hero */
+    #hero {
+      position: relative;
+      overflow: hidden;
+    }
+    #hero .bg-grid {
+      position: absolute;
+      inset: 0;
+      opacity: 0.4;
+    }
+    .blur-orb {
+      position: absolute;
+      width: 24rem; height: 24rem;
+      border-radius: 50%;
+      filter: blur(80px);
+    }
+    .blur-cyan { background: rgba(92,189,185,0.15); top: 33%; right: 25%; }
+    .blur-gold { background: rgba(201,168,76,0.15); bottom: 10%; left: 25%; }
+    #hero .container { padding-top: 7rem; padding-bottom: 10rem; position: relative; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      border: 1px solid rgba(201,168,76,0.4);
+      background: rgba(201,168,76,0.05);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
+    @media (min-width: 768px) { h1 { font-size: 5rem; } }
+    @media (min-width: 1024px) { h1 { font-size: 6rem; } }
+    .hero-desc {
+      font-size: 1.125rem;
+      color: var(--muted);
+      max-width: 640px;
+      margin-bottom: 2.5rem;
+    }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.125rem;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:hover { transform: scale(1.02); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: var(--bg);
+      box-shadow: 0 0 30px rgba(201,168,76,0.3);
+    }
+    .btn-outline {
+      border: 1px solid rgba(92,189,185,0.5);
+      color: var(--cyan);
+      background: transparent;
+    }
+    .btn-outline:hover { background: rgba(92,189,185,0.1); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 4rem;
+      max-width: 480px;
+    }
+    .stat {
+      border-right: 2px solid rgba(201,168,76,0.6);
+      padding-right: 1rem;
+    }
+    .stat-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Sections */
+    section { padding: 6rem 0; position: relative; }
+    .section-header { text-align: center; margin-bottom: 3rem; }
+    .section-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--cyan);
+      margin-bottom: 0.75rem;
+    }
+    h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    @media (min-width: 768px) { h2 { font-size: 3rem; } }
+    .section-desc {
+      color: var(--muted);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Presentation */
+    .iframe-card {
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: var(--card);
+      box-shadow: 0 0 30px rgba(92,189,185,0.2);
+    }
+    .iframe-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,17,23,0.6);
+    }
+    .window-dots { display: flex; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: rgba(239,68,68,0.7); }
+    .dot-yellow { background: rgba(234,179,8,0.7); }
+    .dot-green { background: rgba(34,197,94,0.7); }
+    .iframe-header span { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+    .iframe-header a { font-size: 0.75rem; color: var(--gold); text-decoration: none; }
+    .iframe-header a:hover { text-decoration: underline; }
+    iframe { width: 100%; height: 75vh; border: none; display: block; background: #07101e; }
+
+    /* Simulation */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 768px) {
+      .steps-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .step-card {
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      background: rgba(22,27,34,0.6);
+      transition: border-color 0.2s;
+    }
+    .step-card:hover { border-color: rgba(201,168,76,0.5); }
+    .step-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+    .step-title { font-weight: 700; font-size: 1.125rem; margin-bottom: 0.5rem; }
+    .step-desc { font-size: 0.875rem; color: var(--muted); }
+
+    /* Team */
+    .team-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    @media (min-width: 640px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .team-grid { grid-template-columns: repeat(4, 1fr); } }
+    .team-card {
+      position: relative;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--border);
+      background: rgba(22,27,34,0.6);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .team-card:hover { border-color: rgba(201,168,76,0.6); }
+    .team-card .orb {
+      position: absolute;
+      top: -3rem; left: -3rem;
+      width: 8rem; height: 8rem;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.1);
+      transition: background 0.2s;
+    }
+    .team-card:hover .orb { background: rgba(201,168,76,0.2); }
+    .team-avatar {
+      width: 3.5rem; height: 3.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .team-name { font-weight: 700; font-size: 1.125rem; position: relative; }
+    .team-role { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; position: relative; }
+    .team-card-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--cyan);
+      margin-bottom: 0.75rem;
+      position: relative;
+    }
+
+    /* Supervisor */
+    .supervisor {
+      max-width: 28rem;
+      margin: 0 auto;
+      padding: 2rem;
+      border-radius: 1rem;
+      border: 2px solid rgba(201,168,76,0.5);
+      background: linear-gradient(135deg, var(--navy-2), var(--bg));
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .supervisor .bg-grid {
+      position: absolute;
+      inset: 0;
+      opacity: 0.3;
+    }
+    .supervisor-avatar {
+      width: 4rem; height: 4rem;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 1.5rem;
+      box-shadow: 0 0 30px rgba(201,168,76,0.3);
+      position: relative;
+    }
+    .supervisor-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      position: relative;
+    }
+    .supervisor-role {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      position: relative;
+    }
+    .supervisor-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+      position: relative;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0;
+      margin-top: 3rem;
+    }
+    footer .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+    }
+    @media (min-width: 768px) {
+      footer .container { flex-direction: row; justify-content: space-between; }
+    }
+    .footer-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.875rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+    }
+    .footer-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--gold);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a href="#hero" class="logo">
+      <div class="logo-icon">G</div>
+      GEOSTRING<span>.</span>
+    </a>
+    <nav>
+      <a href="#hero">الرئيسية</a>
+      <a href="#presentation">العرض التقديمي</a>
+      <a href="#simulation">المحاكاة</a>
+      <a href="#team">الفريق</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- Hero -->
+<section id="hero">
+  <div class="bg-grid"></div>
+  <div class="blur-orb blur-cyan"></div>
+  <div class="blur-orb blur-gold"></div>
+  <div class="container">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      CNC · POLAR GEOMETRY · STRING ART
+    </div>
+    <h1>منظومة <span class="text-gradient-gold">هندسة الأوتار</span></h1>
+    <p class="hero-desc">
+      روبوت رسم بالخيط مؤتمت يعتمد على الهندسة القطبية والتحكم الرقمي CNC — يحوّل الصور إلى لوحات فنية محبوكة من خيط واحد متصل.
+    </p>
+    <div class="btn-group">
+      <a href="#simulation" class="btn btn-primary">
+        جرب المحاكاة الآن ←
+      </a>
+      <a href="#presentation" class="btn btn-outline">
+        مشاهدة العرض التقديمي
+      </a>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">360°</div>
+        <div class="stat-label">تحكم قطبي</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">CNC</div>
+        <div class="stat-label">تحكم رقمي</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1</div>
+        <div class="stat-label">خيط متصل</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Presentation -->
+<section id="presentation">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">02 — PRESENTATION</div>
+      <h2>العرض التقديمي للمشروع</h2>
+      <p class="section-desc">
+        تصفّح شرائح العرض مباشرة من هنا — استخدم القائمة الجانبية للتنقّل بين الشرائح.
+      </p>
+    </div>
+    <div class="iframe-card glow-cyan">
+      <div class="iframe-header">
+        <div class="window-dots">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <span>Geostring_Presentation.html</span>
+        <a href="presentation.html" target="_blank">فتح في نافذة جديدة ↗</a>
+      </div>
+      <iframe src="presentation.html" title="Geostring Presentation"></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- Simulation -->
+<section id="simulation">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">03 — SIMULATION</div>
+      <h2><span class="text-gradient-gold">محاكاة</span> المشروع</h2>
+      <p class="section-desc">
+        جرّب أداة المحاكاة التفاعلية وحوّل صورك إلى فن الخيط رقمياً قبل الطباعة الفعلية.
+      </p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-title">ارفع صورتك</div>
+        <div class="step-desc">اختر أي صورة لتحويلها إلى مسار خيط واحد.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-title">اضبط المعاملات</div>
+        <div class="step-desc">عدد المسامير، كثافة الخيط، التباين والدقة.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-title">صدّر المسار</div>
+        <div class="step-desc">احصل على إحداثيات قابلة للتنفيذ على آلة CNC.</div>
+      </div>
+    </div>
+    <div class="iframe-card">
+      <div class="iframe-header">
+        <span>● LIVE SIMULATION</span>
+        <a href="https://stringphotokr.dothome.co.kr/indexmaking.html" target="_blank">فتح في نافذة كاملة ↗</a>
+      </div>
+      <iframe src="https://stringphotokr.dothome.co.kr/indexmaking.html" title="String Simulation" style="background:#fff; height:80vh;"></iframe>
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+      <a href="https://stringphotokr.dothome.co.kr/indexmaking.html" target="_blank" class="btn btn-primary" style="background:linear-gradient(135deg,var(--cyan),var(--gold)); box-shadow:0 0 30px rgba(92,189,185,0.3);">
+        افتح المحاكاة بحجم كامل ↗
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Team -->
+<section id="team">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">04 — TEAM</div>
+      <h2>فريق العمل</h2>
+      <p class="section-desc">العقول التي صنعت هذه المنظومة</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="orb"></div>
+        <div class="team-card-num">01</div>
+        <div class="team-avatar">ث</div>
+        <div class="team-name">ثابت حسان</div>
+        <div class="team-role">قائد الفريق</div>
+      </div>
+      <div class="team-card">
+        <div class="orb"></div>
+        <div class="team-card-num">02</div>
+        <div class="team-avatar">ع</div>
+        <div class="team-name">عبدالله عمار</div>
+        <div class="team-role">باحث</div>
+      </div>
+      <div class="team-card">
+        <div class="orb"></div>
+        <div class="team-card-num">03</div>
+        <div class="team-avatar">س</div>
+        <div class="team-name">سالي أحمد</div>
+        <div class="team-role">باحث</div>
+      </div>
+      <div class="team-card">
+        <div class="orb"></div>
+        <div class="team-card-num">04</div>
+        <div class="team-avatar">ك</div>
+        <div class="team-name">كوكب معن</div>
+        <div class="team-role">باحث</div>
+      </div>
+    </div>
+    <div class="supervisor">
+      <div class="bg-grid"></div>
+      <div class="supervisor-tag">SUPERVISOR · بإشراف</div>
+      <div class="supervisor-avatar">م</div>
+      <div class="supervisor-name">م. مفاذ يحيى ضمرة</div>
+      <div class="supervisor-role">المشرف الأكاديمي</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-brand">GEOSTRING SYSTEM © 2025</div>
+    <div class="footer-tag">منظومة هندسة الأوتار · CNC POLAR ART</div>
+  </div>
+</footer>
+
+</body>
+</html>
