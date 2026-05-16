@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Geostring" },
+      { name: "description", content: "Geostring Innovations showcases a modern, professional website for the innovative 'Geostring System' engineering project." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Geostring" },
+      { property: "og:description", content: "Geostring Innovations showcases a modern, professional website for the innovative 'Geostring System' engineering project." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Geostring" },
+      { name: "twitter:description", content: "Geostring Innovations showcases a modern, professional website for the innovative 'Geostring System' engineering project." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4bcb20d4-a78e-4332-9797-0662d2688ced/id-preview-209e4562--c63013c5-4a9b-4d61-bb72-0b188a386484.lovable.app-1778931308596.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4bcb20d4-a78e-4332-9797-0662d2688ced/id-preview-209e4562--c63013c5-4a9b-4d61-bb72-0b188a386484.lovable.app-1778931308596.png" },
     ],
     links: [
       {
