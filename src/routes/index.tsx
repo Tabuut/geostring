@@ -31,6 +31,7 @@ function Nav() {
           <a href="#hero" className="hover:text-[var(--gold)] transition">الرئيسية</a>
           <a href="#presentation" className="hover:text-[var(--gold)] transition">العرض التقديمي</a>
           <a href="#simulation" className="hover:text-[var(--gold)] transition">المحاكاة</a>
+          <a href="#specs" className="hover:text-[var(--gold)] transition">الأبعاد</a>
           <a href="#team" className="hover:text-[var(--gold)] transition">الفريق</a>
         </nav>
       </div>
