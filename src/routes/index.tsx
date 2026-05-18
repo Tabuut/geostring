@@ -246,7 +246,7 @@ function Team() {
     <section id="team" className="py-24 relative">
       <div className="container mx-auto px-6">
         <div className="text-center mb-14">
-          <div className="font-mono text-xs text-[var(--cyan)] mb-3">04 — TEAM</div>
+          <div className="font-mono text-xs text-[var(--cyan)] mb-3">05 — TEAM</div>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">فريق العمل</h2>
           <p className="text-muted-foreground">العقول التي صنعت هذه المنظومة</p>
         </div>
