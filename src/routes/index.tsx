@@ -305,6 +305,7 @@ function Index() {
         <Hero />
         <Presentation />
         <Simulation />
+        <Specifications />
         <Team />
       </main>
       <Footer />
