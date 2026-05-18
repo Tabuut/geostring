@@ -31,6 +31,7 @@ function Nav() {
           <a href="#hero" className="hover:text-[var(--gold)] transition">الرئيسية</a>
           <a href="#presentation" className="hover:text-[var(--gold)] transition">العرض التقديمي</a>
           <a href="#simulation" className="hover:text-[var(--gold)] transition">المحاكاة</a>
+          <a href="#specs" className="hover:text-[var(--gold)] transition">الأبعاد</a>
           <a href="#team" className="hover:text-[var(--gold)] transition">الفريق</a>
         </nav>
       </div>
@@ -186,12 +187,66 @@ function Simulation() {
   );
 }
 
+function Specifications() {
+  const specs = [
+    { label: "عرض الإطار الكلي", value: "325 mm" },
+    { label: "طول الإطار الكلي", value: "425 mm" },
+    { label: "قطر القرص (Canvas)", value: "290 mm" },
+    { label: "طول ذراع الرسم", value: "100 mm" },
+    { label: "ارتفاع ذراع الرسم", value: "200 mm" },
+    { label: "Arduino UNO", value: "68 × 53 mm" },
+  ];
+
+  return (
+    <section id="specs" className="py-24 relative">
+      <div className="absolute inset-0 bg-grid opacity-20" />
+      <div className="container mx-auto px-6 relative">
+        <div className="text-center mb-12">
+          <div className="font-mono text-xs text-[var(--cyan)] mb-3">04 — SPECIFICATIONS</div>
+          <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
+            <span className="text-gradient-gold">الأبعاد</span> الرئيسية
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            المواصفات الفنية الأساسية لمنظومة هندسة الأوتار
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto rounded-2xl border border-[var(--gold)]/30 bg-card/60 shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/60">
+            <div className="flex gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-500/70" />
+              <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
+              <span className="w-3 h-3 rounded-full bg-green-500/70" />
+            </div>
+            <span className="font-mono text-xs text-muted-foreground">Technical_Specs.json</span>
+            <span className="text-xs text-[var(--gold)]">mm</span>
+          </div>
+          <div className="divide-y divide-border">
+            {specs.map((s, i) => (
+              <div
+                key={s.label}
+                className="flex items-center justify-between px-6 py-4 hover:bg-[var(--gold)]/5 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-[var(--cyan)] w-6">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="font-bold">{s.label}</span>
+                </div>
+                <span className="font-mono text-[var(--gold)] font-bold">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Team() {
   return (
     <section id="team" className="py-24 relative">
       <div className="container mx-auto px-6">
         <div className="text-center mb-14">
-          <div className="font-mono text-xs text-[var(--cyan)] mb-3">04 — TEAM</div>
+          <div className="font-mono text-xs text-[var(--cyan)] mb-3">05 — TEAM</div>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">فريق العمل</h2>
           <p className="text-muted-foreground">العقول التي صنعت هذه المنظومة</p>
         </div>
@@ -250,6 +305,7 @@ function Index() {
         <Hero />
         <Presentation />
         <Simulation />
+        <Specifications />
         <Team />
       </main>
       <Footer />
