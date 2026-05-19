@@ -300,6 +300,7 @@ function Footer() {
         <div className="font-display text-sm tracking-widest text-muted-foreground">
           GEOSTRING SYSTEM © {new Date().getFullYear()}
         </div>
+        <div className="font-mono text-xs text-[var(--gold)]">Developed by Thabit Hassan Salem</div>
         <div className="font-mono text-xs text-[var(--gold)]">منظومة هندسة الأوتار · CNC POLAR ART</div>
       </div>
     </footer>
