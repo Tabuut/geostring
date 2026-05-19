@@ -62,18 +62,24 @@ function Hero() {
             روبوت رسم بالخيط مؤتمت يعتمد على الهندسة القطبية والتحكم الرقمي CNC — يحوّل الصور إلى لوحات فنية محبوكة من خيط واحد متصل.
           </p>
           <div className="flex flex-wrap gap-4">
-            <a
-              href="#simulation"
+            <Link
+              to="/app"
               className="group inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[var(--gold)] to-[var(--gold-2)] text-background font-bold text-lg glow-gold hover:scale-[1.02] transition"
             >
-              جرب المحاكاة الآن
+              افتح مولّد فن الأوتار
               <span className="group-hover:-translate-x-1 transition">←</span>
+            </Link>
+            <a
+              href="#simulation"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-lg border border-[var(--cyan)]/50 text-[var(--cyan)] font-bold text-lg hover:bg-[var(--cyan)]/10 transition"
+            >
+              جرب المحاكاة
             </a>
             <a
               href="#presentation"
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-lg border border-[var(--cyan)]/50 text-[var(--cyan)] font-bold text-lg hover:bg-[var(--cyan)]/10 transition"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-lg border border-border text-muted-foreground font-bold text-lg hover:text-foreground transition"
             >
-              مشاهدة العرض التقديمي
+              العرض التقديمي
             </a>
           </div>
 
