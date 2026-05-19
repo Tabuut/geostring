@@ -33,6 +33,9 @@ function Nav() {
           <a href="#simulation" className="hover:text-[var(--gold)] transition">المحاكاة</a>
           <a href="#specs" className="hover:text-[var(--gold)] transition">الأبعاد</a>
           <a href="#team" className="hover:text-[var(--gold)] transition">الفريق</a>
+          <Link to="/app" className="px-4 py-1.5 rounded-md bg-gradient-to-r from-[var(--gold)] to-[var(--gold-2)] text-background font-bold hover:scale-[1.03] transition">
+            افتح التطبيق ←
+          </Link>
         </nav>
       </div>
     </header>
