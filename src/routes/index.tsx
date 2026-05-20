@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,25 +20,57 @@ const team = [
   { name: "كوكب معن", role: "باحث" },
 ];
 
+const navLinks = [
+  { href: "#hero", label: "الرئيسية" },
+  { href: "#presentation", label: "العرض التقديمي" },
+  { href: "#simulation", label: "المحاكاة" },
+  { href: "#specs", label: "الأبعاد" },
+  { href: "#team", label: "الفريق" },
+];
+
 function Nav() {
+  const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border">
-      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--gold)] to-[var(--gold-2)] flex items-center justify-center font-display font-bold text-background">G</div>
-          <span className="font-display text-lg font-bold tracking-wider">GEOSTRING<span className="text-[var(--gold)]">.</span></span>
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+      <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-[var(--gold)] to-[var(--gold-2)] flex items-center justify-center font-display font-bold text-background shrink-0">G</div>
+          <span className="font-display text-base sm:text-lg font-bold tracking-wider truncate">GEOSTRING<span className="text-[var(--gold)]">.</span></span>
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#hero" className="hover:text-[var(--gold)] transition">الرئيسية</a>
-          <a href="#presentation" className="hover:text-[var(--gold)] transition">العرض التقديمي</a>
-          <a href="#simulation" className="hover:text-[var(--gold)] transition">المحاكاة</a>
-          <a href="#specs" className="hover:text-[var(--gold)] transition">الأبعاد</a>
-          <a href="#team" className="hover:text-[var(--gold)] transition">الفريق</a>
+          {navLinks.map(l => (
+            <a key={l.href} href={l.href} className="hover:text-[var(--gold)] transition">{l.label}</a>
+          ))}
         </nav>
-        <Link to="/app" className="px-3 py-1.5 rounded-md bg-gradient-to-r from-[var(--gold)] to-[var(--gold-2)] text-background font-bold text-sm hover:scale-[1.03] transition whitespace-nowrap">
-          افتح التطبيق ←
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/app" className="px-2.5 py-1.5 sm:px-3 rounded-md bg-gradient-to-r from-[var(--gold)] to-[var(--gold-2)] text-background font-bold text-xs sm:text-sm hover:scale-[1.03] transition whitespace-nowrap">
+            افتح التطبيق ←
+          </Link>
+          <button
+            onClick={() => setOpen(o => !o)}
+            aria-label="القائمة"
+            className="md:hidden w-9 h-9 inline-flex items-center justify-center rounded-md border border-border text-[var(--gold)]"
+          >
+            {open ? "✕" : "☰"}
+          </button>
+        </div>
       </div>
+      {open && (
+        <nav className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
+          <div className="container mx-auto px-4 py-3 flex flex-col gap-1">
+            {navLinks.map(l => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="py-2 px-3 rounded-md text-sm text-muted-foreground hover:text-[var(--gold)] hover:bg-[var(--gold)]/5 transition"
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
