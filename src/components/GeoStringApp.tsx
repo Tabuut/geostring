@@ -209,6 +209,7 @@ export default function GeoStringApp(){
   // AI
   const [aiLoad,setAiLoad]=useState(false);
   const [aiRes,setAiRes]=useState(null);
+  const [aiSuggestion,setAiSuggestion]=useState(null);
   const [chat,setChat]=useState([]);
   const [chatIn,setChatIn]=useState("");
   const [chatBusy,setChatBusy]=useState(false);
