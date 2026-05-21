@@ -252,7 +252,7 @@ export default function GeoStringApp(){
     const r=new FileReader();
     r.onload=ev=>{
       setImage(ev.target.result);loadImage(ev.target.result);
-      setStatus("idle");setSeq([]);setProg(0);setLiveCount(0);setAiRes(null);seqLinesRef.current=[];
+      setStatus("idle");setSeq([]);setProg(0);setLiveCount(0);setAiRes(null);setAiSuggestion(null);seqLinesRef.current=[];
     };
     r.readAsDataURL(f);
   },[loadImage]);
