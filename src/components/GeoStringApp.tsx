@@ -829,9 +829,24 @@ function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn
         <div style={{background:"rgba(8,22,14,.8)",border:`1px solid rgba(92,189,185,.25)`,borderRadius:10,padding:"12px 16px",flexShrink:0}} className="gs-up">
           <div style={{fontFamily:F.mono,fontSize:8,color:C.cyan,letterSpacing:"0.8px",marginBottom:8}}>◈ AI ANALYSIS RESULT</div>
           <div style={{fontSize:12,color:C.text,lineHeight:1.85,whiteSpace:"pre-wrap",fontFamily:F.ar}}>{aiRes}</div>
-          <div style={{marginTop:8,padding:"5px 10px",background:"rgba(92,189,185,.06)",border:`1px solid rgba(92,189,185,.18)`,borderRadius:5,fontFamily:F.mono,fontSize:8,color:C.cyan2}}>
-            ✓ تم تطبيق الإعدادات المقترحة على شريط المعاملات تلقائياً
-          </div>
+          {aiSuggestion && (
+            <div style={{marginTop:10,padding:"6px 10px",background:"rgba(92,189,185,.06)",border:`1px solid rgba(92,189,185,.18)`,borderRadius:5,fontFamily:F.mono,fontSize:8,color:C.cyan2}}>
+              ✓ تم تطبيق الإعدادات المقترحة على شريط المعاملات تلقائياً
+            </div>
+          )}
+          {aiSuggestion && (
+            <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+              <GBtn onClick={()=>{applySuggestion(aiSuggestion);generate&&generate();}} variant="gold" icon="◈" style={{flex:1,minWidth:160}}>
+                تطبيق وتوليد بأفضل إعدادات
+              </GBtn>
+              <GBtn onClick={()=>applySuggestion(aiSuggestion)} variant="outline-cyan" icon="↻" style={{flex:1,minWidth:140}}>
+                إعادة تطبيق الإعدادات
+              </GBtn>
+              <GBtn onClick={runAI} variant="outline-gold" icon="✦" style={{flex:1,minWidth:140}}>
+                إعادة التحليل
+              </GBtn>
+            </div>
+          )}
         </div>
       )}
 
