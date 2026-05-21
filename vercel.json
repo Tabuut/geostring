@@ -1,7 +1,7 @@
 {
-  "buildCommand": null,
-  "installCommand": null,
-  "outputDirectory": "public",
+  "buildCommand": "bun run build",
+  "installCommand": "bun install",
+  "outputDirectory": "dist/client",
   "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
