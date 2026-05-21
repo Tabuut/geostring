@@ -36,16 +36,42 @@ async function askGemini(prompt, b64 = null) {
 }
 
 async function analyzeImage(b64) {
-  return askGemini(`أنت خبير في نظام Geostring للرسم الهندسي بالأوتار وآلات CNC.
-حلل هذه الصورة وأعطني:
-1. هل هي مناسبة لفن الخيوط؟ ولماذا؟
-2. الإعدادات المثالية:
-   - عدد المسامير (رقم بين 80-400)
-   - عدد الخيوط (رقم بين 500-8000)
-   - الشكل: دائري أم مربع
-3. نصائح احترافية لأفضل نتيجة على آلة CNC
-أجب بالعربية بشكل مختصر وواضح، ضع الأرقام صريحة.`, b64);
+  return askGemini(`أنت خبير في نظام Geostring للرسم بالأوتار على آلة CNC.
+حلل هذه الصورة بدقة (تباين، تفاصيل، نوع الموضوع: وجه/منظر/شعار...) واقترح الإعدادات المثلى لأفضل نتيجة ممكنة.
+
+أعد ردك **حصراً** بصيغة JSON صالحة فقط بدون أي نص قبله أو بعده وبدون علامات markdown، بالشكل التالي:
+{
+  "suitable": true,
+  "subject": "وصف موجز جداً للموضوع",
+  "shape": "circle",
+  "nails": 240,
+  "threads": 4000,
+  "minGap": 20,
+  "lineWeight": 0.25,
+  "contrast": 1.3,
+  "brightness": 0.05,
+  "threadColor": "#1a1a2e",
+  "bgColor": "#ffffff",
+  "reasoning": "شرح مختصر بالعربية (3-5 جمل) يبرر هذه الإعدادات ويعطي نصائح للتنفيذ على CNC"
 }
+
+قواعد توجيهية:
+- الوجوه: nails 240-320، threads 3500-5500، contrast 1.2-1.6، خيط داكن على خلفية فاتحة.
+- المناظر/التفاصيل العالية: nails 280-360، threads 5000-7000.
+- الشعارات/الأشكال البسيطة: nails 120-180، threads 1500-2500، shape غالباً square.
+- الصور الداكنة: brightness بين 0.1 و 0.25.
+- الصور الباهتة: contrast بين 1.4 و 1.8.
+- shape: "circle" أو "square" فقط.`, b64);
+}
+
+function extractJSON(txt){
+  if(!txt) return null;
+  const m=txt.match(/\{[\s\S]*\}/);
+  if(!m) return null;
+  try{ return JSON.parse(m[0]); }catch{ return null; }
+}
+function clamp(n,a,b){ n=+n; if(!isFinite(n)) return null; return Math.min(b,Math.max(a,n)); }
+function validHex(s){ return typeof s==="string" && /^#[0-9a-fA-F]{6}$/.test(s); }
 
 const toB64 = c => c.toDataURL("image/jpeg", 0.85).split(",")[1];
 
@@ -183,6 +209,7 @@ export default function GeoStringApp(){
   // AI
   const [aiLoad,setAiLoad]=useState(false);
   const [aiRes,setAiRes]=useState(null);
+  const [aiSuggestion,setAiSuggestion]=useState(null);
   const [chat,setChat]=useState([]);
   const [chatIn,setChatIn]=useState("");
   const [chatBusy,setChatBusy]=useState(false);
@@ -225,7 +252,7 @@ export default function GeoStringApp(){
     const r=new FileReader();
     r.onload=ev=>{
       setImage(ev.target.result);loadImage(ev.target.result);
-      setStatus("idle");setSeq([]);setProg(0);setLiveCount(0);setAiRes(null);seqLinesRef.current=[];
+      setStatus("idle");setSeq([]);setProg(0);setLiveCount(0);setAiRes(null);setAiSuggestion(null);seqLinesRef.current=[];
     };
     r.readAsDataURL(f);
   },[loadImage]);
@@ -324,20 +351,38 @@ export default function GeoStringApp(){
     a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.click();
   };
 
+  const applySuggestion=useCallback((s)=>{
+    if(!s) return;
+    const n=clamp(s.nails,80,400); if(n!=null) setNailCnt(Math.round(n));
+    const t=clamp(s.threads,500,8000); if(t!=null) setThreadCnt(Math.round(t));
+    const g=clamp(s.minGap,5,60); if(g!=null) setMinGap(Math.round(g));
+    const lw=clamp(s.lineWeight,0.05,0.4); if(lw!=null) setLineWeight(+lw.toFixed(2));
+    const c=clamp(s.contrast,0.5,3); if(c!=null) setContrast(+c.toFixed(2));
+    const b=clamp(s.brightness,-0.4,0.4); if(b!=null) setBrightness(+b.toFixed(2));
+    if(s.shape==="circle"||s.shape==="square") setShape(s.shape);
+    if(validHex(s.threadColor)) setThreadColor(s.threadColor.toLowerCase());
+    if(validHex(s.bgColor)) setBgColor(s.bgColor.toLowerCase());
+  },[]);
+
   const runAI=useCallback(async()=>{
     const src=hidOrigRef.current||origRef.current;if(!src||!image) return;
-    setAiLoad(true);setAiRes(null);setTab("ai");
+    setAiLoad(true);setAiRes(null);setAiSuggestion(null);setTab("ai");
     try{
       const b64=toB64(src);
-      const res=await analyzeImage(b64);setAiRes(res);
-      const nm=res.match(/(\d{2,3})\s*مسمار/);const lm=res.match(/(\d{3,4})\s*خيط/);
-      if(nm) setNailCnt(Math.min(400,Math.max(80,+nm[1])));
-      if(lm) setThreadCnt(Math.min(8000,Math.max(500,+lm[1])));
-      if(res.includes("مربع")) setShape("square");
-      else if(res.includes("دائري")) setShape("circle");
+      const res=await analyzeImage(b64);
+      const parsed=extractJSON(res);
+      if(parsed){
+        setAiSuggestion(parsed);
+        applySuggestion(parsed);
+        const summary=`✦ تحليل الصورة\n${parsed.subject?`الموضوع: ${parsed.subject}\n`:""}${parsed.reasoning||""}\n\n◈ الإعدادات المُطبَّقة تلقائياً:\n• الشكل: ${parsed.shape==="square"?"مربع":"دائري"}\n• المسامير: ${parsed.nails}\n• الخيوط: ${parsed.threads}\n• الفجوة الدنيا: ${parsed.minGap}\n• وزن الخط: ${parsed.lineWeight}\n• التباين: ${parsed.contrast}  •  السطوع: ${parsed.brightness}\n• لون الخيط: ${parsed.threadColor}  •  الخلفية: ${parsed.bgColor}`;
+        setAiRes(summary);
+      } else {
+        setAiRes(res||"لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
+      }
     }catch(e){setAiRes("خطأ في الاتصال بالذكاء الاصطناعي. تحقق من الاتصال.");}
     setAiLoad(false);
-  },[image]);
+  },[image,applySuggestion]);
+
 
   const sendChat=useCallback(async()=>{
     const msg=chatIn.trim();if(!msg||chatBusy) return;
@@ -615,7 +660,7 @@ export default function GeoStringApp(){
             )}
 
             {tab==="steps"&&<StepsPanel seq={seq} nailCnt={nailCnt} shape={shape}/>}
-            {tab==="ai"&&<AiPanel aiLoad={aiLoad} aiRes={aiRes} chat={chat} chatIn={chatIn} setChatIn={setChatIn} chatBusy={chatBusy} sendChat={sendChat} onKey={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} chatEndRef={chatEndRef} hasImg={!!image} runAI={runAI}/>}
+            {tab==="ai"&&<AiPanel aiLoad={aiLoad} aiRes={aiRes} aiSuggestion={aiSuggestion} applySuggestion={applySuggestion} generate={generate} chat={chat} chatIn={chatIn} setChatIn={setChatIn} chatBusy={chatBusy} sendChat={sendChat} onKey={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} chatEndRef={chatEndRef} hasImg={!!image} runAI={runAI}/>}
           </div>
         </main>
       </div>
@@ -742,7 +787,7 @@ function NailTag({n,accent=false}){
 }
 
 /* ══════ AI PANEL ══════ */
-function AiPanel({aiLoad,aiRes,chat,chatIn,setChatIn,chatBusy,sendChat,onKey,chatEndRef,hasImg,runAI}){
+function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn,setChatIn,chatBusy,sendChat,onKey,chatEndRef,hasImg,runAI}){
   return(
     <div style={{width:"100%",maxWidth:660,display:"flex",flexDirection:"column",gap:12,height:"100%",maxHeight:"100%"}} className="gs-up">
 
@@ -784,9 +829,24 @@ function AiPanel({aiLoad,aiRes,chat,chatIn,setChatIn,chatBusy,sendChat,onKey,cha
         <div style={{background:"rgba(8,22,14,.8)",border:`1px solid rgba(92,189,185,.25)`,borderRadius:10,padding:"12px 16px",flexShrink:0}} className="gs-up">
           <div style={{fontFamily:F.mono,fontSize:8,color:C.cyan,letterSpacing:"0.8px",marginBottom:8}}>◈ AI ANALYSIS RESULT</div>
           <div style={{fontSize:12,color:C.text,lineHeight:1.85,whiteSpace:"pre-wrap",fontFamily:F.ar}}>{aiRes}</div>
-          <div style={{marginTop:8,padding:"5px 10px",background:"rgba(92,189,185,.06)",border:`1px solid rgba(92,189,185,.18)`,borderRadius:5,fontFamily:F.mono,fontSize:8,color:C.cyan2}}>
-            ✓ تم تطبيق الإعدادات المقترحة على شريط المعاملات تلقائياً
-          </div>
+          {aiSuggestion && (
+            <div style={{marginTop:10,padding:"6px 10px",background:"rgba(92,189,185,.06)",border:`1px solid rgba(92,189,185,.18)`,borderRadius:5,fontFamily:F.mono,fontSize:8,color:C.cyan2}}>
+              ✓ تم تطبيق الإعدادات المقترحة على شريط المعاملات تلقائياً
+            </div>
+          )}
+          {aiSuggestion && (
+            <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+              <GBtn onClick={()=>{applySuggestion(aiSuggestion);generate&&generate();}} variant="gold" icon="◈" style={{flex:1,minWidth:160}}>
+                تطبيق وتوليد بأفضل إعدادات
+              </GBtn>
+              <GBtn onClick={()=>applySuggestion(aiSuggestion)} variant="outline-cyan" icon="↻" style={{flex:1,minWidth:140}}>
+                إعادة تطبيق الإعدادات
+              </GBtn>
+              <GBtn onClick={runAI} variant="outline-gold" icon="✦" style={{flex:1,minWidth:140}}>
+                إعادة التحليل
+              </GBtn>
+            </div>
+          )}
         </div>
       )}
 
