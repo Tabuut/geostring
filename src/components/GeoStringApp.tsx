@@ -351,20 +351,38 @@ export default function GeoStringApp(){
     a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.click();
   };
 
+  const applySuggestion=useCallback((s)=>{
+    if(!s) return;
+    const n=clamp(s.nails,80,400); if(n!=null) setNailCnt(Math.round(n));
+    const t=clamp(s.threads,500,8000); if(t!=null) setThreadCnt(Math.round(t));
+    const g=clamp(s.minGap,5,60); if(g!=null) setMinGap(Math.round(g));
+    const lw=clamp(s.lineWeight,0.05,0.4); if(lw!=null) setLineWeight(+lw.toFixed(2));
+    const c=clamp(s.contrast,0.5,3); if(c!=null) setContrast(+c.toFixed(2));
+    const b=clamp(s.brightness,-0.4,0.4); if(b!=null) setBrightness(+b.toFixed(2));
+    if(s.shape==="circle"||s.shape==="square") setShape(s.shape);
+    if(validHex(s.threadColor)) setThreadColor(s.threadColor.toLowerCase());
+    if(validHex(s.bgColor)) setBgColor(s.bgColor.toLowerCase());
+  },[]);
+
   const runAI=useCallback(async()=>{
     const src=hidOrigRef.current||origRef.current;if(!src||!image) return;
-    setAiLoad(true);setAiRes(null);setTab("ai");
+    setAiLoad(true);setAiRes(null);setAiSuggestion(null);setTab("ai");
     try{
       const b64=toB64(src);
-      const res=await analyzeImage(b64);setAiRes(res);
-      const nm=res.match(/(\d{2,3})\s*مسمار/);const lm=res.match(/(\d{3,4})\s*خيط/);
-      if(nm) setNailCnt(Math.min(400,Math.max(80,+nm[1])));
-      if(lm) setThreadCnt(Math.min(8000,Math.max(500,+lm[1])));
-      if(res.includes("مربع")) setShape("square");
-      else if(res.includes("دائري")) setShape("circle");
+      const res=await analyzeImage(b64);
+      const parsed=extractJSON(res);
+      if(parsed){
+        setAiSuggestion(parsed);
+        applySuggestion(parsed);
+        const summary=`✦ تحليل الصورة\n${parsed.subject?`الموضوع: ${parsed.subject}\n`:""}${parsed.reasoning||""}\n\n◈ الإعدادات المُطبَّقة تلقائياً:\n• الشكل: ${parsed.shape==="square"?"مربع":"دائري"}\n• المسامير: ${parsed.nails}\n• الخيوط: ${parsed.threads}\n• الفجوة الدنيا: ${parsed.minGap}\n• وزن الخط: ${parsed.lineWeight}\n• التباين: ${parsed.contrast}  •  السطوع: ${parsed.brightness}\n• لون الخيط: ${parsed.threadColor}  •  الخلفية: ${parsed.bgColor}`;
+        setAiRes(summary);
+      } else {
+        setAiRes(res||"لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
+      }
     }catch(e){setAiRes("خطأ في الاتصال بالذكاء الاصطناعي. تحقق من الاتصال.");}
     setAiLoad(false);
-  },[image]);
+  },[image,applySuggestion]);
+
 
   const sendChat=useCallback(async()=>{
     const msg=chatIn.trim();if(!msg||chatBusy) return;
