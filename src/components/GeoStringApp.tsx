@@ -787,7 +787,7 @@ function NailTag({n,accent=false}){
 }
 
 /* ══════ AI PANEL ══════ */
-function AiPanel({aiLoad,aiRes,chat,chatIn,setChatIn,chatBusy,sendChat,onKey,chatEndRef,hasImg,runAI}){
+function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn,setChatIn,chatBusy,sendChat,onKey,chatEndRef,hasImg,runAI}){
   return(
     <div style={{width:"100%",maxWidth:660,display:"flex",flexDirection:"column",gap:12,height:"100%",maxHeight:"100%"}} className="gs-up">
 
