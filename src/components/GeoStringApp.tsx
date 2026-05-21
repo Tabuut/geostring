@@ -36,16 +36,42 @@ async function askGemini(prompt, b64 = null) {
 }
 
 async function analyzeImage(b64) {
-  return askGemini(`أنت خبير في نظام Geostring للرسم الهندسي بالأوتار وآلات CNC.
-حلل هذه الصورة وأعطني:
-1. هل هي مناسبة لفن الخيوط؟ ولماذا؟
-2. الإعدادات المثالية:
-   - عدد المسامير (رقم بين 80-400)
-   - عدد الخيوط (رقم بين 500-8000)
-   - الشكل: دائري أم مربع
-3. نصائح احترافية لأفضل نتيجة على آلة CNC
-أجب بالعربية بشكل مختصر وواضح، ضع الأرقام صريحة.`, b64);
+  return askGemini(`أنت خبير في نظام Geostring للرسم بالأوتار على آلة CNC.
+حلل هذه الصورة بدقة (تباين، تفاصيل، نوع الموضوع: وجه/منظر/شعار...) واقترح الإعدادات المثلى لأفضل نتيجة ممكنة.
+
+أعد ردك **حصراً** بصيغة JSON صالحة فقط بدون أي نص قبله أو بعده وبدون علامات markdown، بالشكل التالي:
+{
+  "suitable": true,
+  "subject": "وصف موجز جداً للموضوع",
+  "shape": "circle",
+  "nails": 240,
+  "threads": 4000,
+  "minGap": 20,
+  "lineWeight": 0.25,
+  "contrast": 1.3,
+  "brightness": 0.05,
+  "threadColor": "#1a1a2e",
+  "bgColor": "#ffffff",
+  "reasoning": "شرح مختصر بالعربية (3-5 جمل) يبرر هذه الإعدادات ويعطي نصائح للتنفيذ على CNC"
 }
+
+قواعد توجيهية:
+- الوجوه: nails 240-320، threads 3500-5500، contrast 1.2-1.6، خيط داكن على خلفية فاتحة.
+- المناظر/التفاصيل العالية: nails 280-360، threads 5000-7000.
+- الشعارات/الأشكال البسيطة: nails 120-180، threads 1500-2500، shape غالباً square.
+- الصور الداكنة: brightness بين 0.1 و 0.25.
+- الصور الباهتة: contrast بين 1.4 و 1.8.
+- shape: "circle" أو "square" فقط.`, b64);
+}
+
+function extractJSON(txt){
+  if(!txt) return null;
+  const m=txt.match(/\{[\s\S]*\}/);
+  if(!m) return null;
+  try{ return JSON.parse(m[0]); }catch{ return null; }
+}
+function clamp(n,a,b){ n=+n; if(!isFinite(n)) return null; return Math.min(b,Math.max(a,n)); }
+function validHex(s){ return typeof s==="string" && /^#[0-9a-fA-F]{6}$/.test(s); }
 
 const toB64 = c => c.toDataURL("image/jpeg", 0.85).split(",")[1];
 
