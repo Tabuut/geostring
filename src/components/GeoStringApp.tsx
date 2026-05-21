@@ -660,7 +660,7 @@ export default function GeoStringApp(){
             )}
 
             {tab==="steps"&&<StepsPanel seq={seq} nailCnt={nailCnt} shape={shape}/>}
-            {tab==="ai"&&<AiPanel aiLoad={aiLoad} aiRes={aiRes} chat={chat} chatIn={chatIn} setChatIn={setChatIn} chatBusy={chatBusy} sendChat={sendChat} onKey={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} chatEndRef={chatEndRef} hasImg={!!image} runAI={runAI}/>}
+            {tab==="ai"&&<AiPanel aiLoad={aiLoad} aiRes={aiRes} aiSuggestion={aiSuggestion} applySuggestion={applySuggestion} generate={generate} chat={chat} chatIn={chatIn} setChatIn={setChatIn} chatBusy={chatBusy} sendChat={sendChat} onKey={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} chatEndRef={chatEndRef} hasImg={!!image} runAI={runAI}/>}
           </div>
         </main>
       </div>
