@@ -22,27 +22,44 @@ const F = {
    ══════════════════════════════════════════════ */
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyC-bWI_7YA3vZTP7NxfS7Utgl0lQhYJDQA`;
 
-async function askGemini(prompt, b64 = null) {
+async function askGemini(prompt, b64 = null, opts = {}) {
   const parts = [];
   if (b64) parts.push({ inlineData: { mimeType: "image/jpeg", data: b64 } });
   parts.push({ text: prompt });
   const res = await fetch(GEMINI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents:[{parts}], generationConfig:{temperature:0.7,maxOutputTokens:1024} }),
+    body: JSON.stringify({
+      contents:[{parts}],
+      generationConfig:{
+        temperature: opts.temperature ?? 0.7,
+        maxOutputTokens: opts.maxOutputTokens ?? 1024,
+        ...(opts.responseMimeType ? { responseMimeType: opts.responseMimeType } : {})
+      }
+    }),
   });
   const d = await res.json();
   return d?.candidates?.[0]?.content?.parts?.[0]?.text || "لم أتمكن من الحصول على رد.";
 }
 
 async function analyzeImage(b64) {
-  return askGemini(`أنت خبير في نظام Geostring للرسم بالأوتار على آلة CNC.
-حلل هذه الصورة بدقة (تباين، تفاصيل، نوع الموضوع: وجه/منظر/شعار...) واقترح الإعدادات المثلى لأفضل نتيجة ممكنة.
+  return askGemini(`أنت خبير عالمي في فن الأوتار (String Art) ونظام Geostring للتنفيذ على آلات CNC.
+حلّل الصورة بدقة عالية وفكر خطوة بخطوة قبل اقتراح الإعدادات:
 
-أعد ردك **حصراً** بصيغة JSON صالحة فقط بدون أي نص قبله أو بعده وبدون علامات markdown، بالشكل التالي:
+١) صنّف الموضوع: وجه بشري / حيوان / منظر طبيعي / مبنى / شعار أو نص / شكل هندسي / صورة معقدة عامة.
+٢) قيّم: مستوى التباين، السطوع العام، كثافة التفاصيل والحواف، نظافة الخلفية، تمركز الموضوع.
+٣) اختر الإعدادات الأمثل لتعطي أوضح وأجمل لوحة أوتار ممكنة على CNC.
+
+أعد ردك **حصراً JSON صالح** بدون أي نص أو markdown:
 {
   "suitable": true,
-  "subject": "وصف موجز جداً للموضوع",
+  "subject": "وصف موجز جداً (وجه/منظر/شعار...)",
+  "analysis": {
+    "contrastLevel": "low|medium|high",
+    "brightnessLevel": "dark|balanced|bright",
+    "detailDensity": "low|medium|high",
+    "cleanBackground": true
+  },
   "shape": "circle",
   "nails": 240,
   "threads": 4000,
@@ -52,16 +69,24 @@ async function analyzeImage(b64) {
   "brightness": 0.05,
   "threadColor": "#1a1a2e",
   "bgColor": "#ffffff",
-  "reasoning": "شرح مختصر بالعربية (3-5 جمل) يبرر هذه الإعدادات ويعطي نصائح للتنفيذ على CNC"
+  "reasoning": "شرح بالعربية (3-6 جمل) يربط كل قيمة بخصائص الصورة، مع نصائح تنفيذ على CNC."
 }
 
-قواعد توجيهية:
-- الوجوه: nails 240-320، threads 3500-5500، contrast 1.2-1.6، خيط داكن على خلفية فاتحة.
-- المناظر/التفاصيل العالية: nails 280-360، threads 5000-7000.
-- الشعارات/الأشكال البسيطة: nails 120-180، threads 1500-2500، shape غالباً square.
-- الصور الداكنة: brightness بين 0.1 و 0.25.
-- الصور الباهتة: contrast بين 1.4 و 1.8.
-- shape: "circle" أو "square" فقط.`, b64);
+قواعد دقيقة (التزم بها بصرامة):
+• الشكل: "circle" للوجوه والحيوانات والمناظر والصور العضوية. "square" للشعارات/النصوص/الأشكال الهندسية.
+• وجوه/بورتريه: nails 260-320، threads 4000-5500، minGap 18-24، lineWeight 0.18-0.24، خيط داكن (#0d0d0d - #1a1a2e) على خلفية فاتحة (#ffffff - #faf6ee).
+• حيوانات/فراء/تفاصيل دقيقة: nails 300-360، threads 5500-7500، lineWeight 0.15-0.22.
+• مناظر/تفاصيل عالية: nails 280-360، threads 5000-7000، minGap 15-22.
+• شعارات/نصوص: shape "square"، nails 140-200، threads 1800-3000، minGap 25-40، lineWeight 0.25-0.35.
+• أشكال هندسية نقية: nails 120-180، threads 1500-2500.
+• صور داكنة: brightness 0.12-0.25. صور فاتحة جداً: brightness -0.15 إلى -0.05 و contrast 1.5-1.9.
+• تباين منخفض: contrast 1.5-1.9. تباين عالي جداً: contrast 0.9-1.15.
+• كثافة تفاصيل عالية: ارفع nails/threads نحو الحد الأعلى وقلل lineWeight.
+• كثافة منخفضة: قلل threads (لتجنّب طمس النتيجة) وارفع lineWeight قليلاً.
+• استخدم دائماً خيط داكن + خلفية فاتحة (إلا لصور مضيئة جداً على خلفية سوداء).
+• اضمن: minGap < nails/6 و threads/nails بين 12 و 25.
+
+النطاقات: nails 80-400، threads 500-8000، minGap 5-60، lineWeight 0.05-0.40، contrast 0.5-3.0، brightness -0.4 إلى 0.4.`, b64, { temperature: 0.25, maxOutputTokens: 1400, responseMimeType: "application/json" });
 }
 
 function extractJSON(txt){
