@@ -399,8 +399,11 @@ export default function GeoStringApp(){
       if(parsed){
         setAiSuggestion(parsed);
         applySuggestion(parsed);
-        const summary=`✦ تحليل الصورة\n${parsed.subject?`الموضوع: ${parsed.subject}\n`:""}${parsed.reasoning||""}\n\n◈ الإعدادات المُطبَّقة تلقائياً:\n• الشكل: ${parsed.shape==="square"?"مربع":"دائري"}\n• المسامير: ${parsed.nails}\n• الخيوط: ${parsed.threads}\n• الفجوة الدنيا: ${parsed.minGap}\n• وزن الخط: ${parsed.lineWeight}\n• التباين: ${parsed.contrast}  •  السطوع: ${parsed.brightness}\n• لون الخيط: ${parsed.threadColor}  •  الخلفية: ${parsed.bgColor}`;
+        const a=parsed.analysis||{};
+        const analysisLine=a.contrastLevel?`\n◆ تحليل الصورة: تباين ${a.contrastLevel} • سطوع ${a.brightnessLevel} • تفاصيل ${a.detailDensity}${a.cleanBackground===false?" • خلفية معقدة":""}`:"";
+        const summary=`✦ تحليل الصورة\n${parsed.subject?`الموضوع: ${parsed.subject}\n`:""}${parsed.reasoning||""}${analysisLine}\n\n◈ الإعدادات المُطبَّقة تلقائياً:\n• الشكل: ${parsed.shape==="square"?"مربع":"دائري"}\n• المسامير: ${parsed.nails}\n• الخيوط: ${parsed.threads}\n• الفجوة الدنيا: ${parsed.minGap}\n• وزن الخط: ${parsed.lineWeight}\n• التباين: ${parsed.contrast}  •  السطوع: ${parsed.brightness}\n• لون الخيط: ${parsed.threadColor}  •  الخلفية: ${parsed.bgColor}`;
         setAiRes(summary);
+        setTimeout(()=>{ try{ generate&&generate(); }catch{} }, 80);
       } else {
         setAiRes(res||"لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
       }
