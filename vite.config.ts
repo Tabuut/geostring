@@ -3,6 +3,5 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   tanstackStart: {
     target: "static",
-    server: { entry: "server" },
   },
 });
