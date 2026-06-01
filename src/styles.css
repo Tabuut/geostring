@@ -1,5 +1,5 @@
-@import "tailwindcss" source(none);
 @import url("https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@400;500;700;900&family=Barlow+Condensed:wght@600;700;800&display=swap");
+@import "tailwindcss" source(none);
 @import "tw-animate-css";
 @source "../src";
 
