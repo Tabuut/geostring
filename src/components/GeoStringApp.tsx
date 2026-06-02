@@ -242,6 +242,7 @@ export default function GeoStringApp(){
   const [chatBusy,setChatBusy]=useState(false);
   // Drag
   const [dragging,setDragging]=useState(false);
+  const [toast,setToast]=useState(null);
 
   const chatEndRef=useRef(null);
   const cvsRef=useRef(null);
