@@ -248,6 +248,7 @@ export default function GeoStringApp(){
   const fileRef=useRef(null);
   const animRef=useRef(null);
   const seqLinesRef=useRef([]);
+  const generateRef=useRef(null);
 
   useEffect(()=>{
     const el=document.createElement("style");el.textContent=CSS;document.head.appendChild(el);
@@ -344,6 +345,8 @@ export default function GeoStringApp(){
     animRef.current=requestAnimationFrame(tick);
   },[imgData,nails,threadCnt,minGap,lineWeight,contrast,brightness,threadColor,bgColor,draw]);
 
+  useEffect(()=>{ generateRef.current=generate; },[generate]);
+
   const stop=()=>{if(animRef.current) cancelAnimationFrame(animRef.current);setStatus("done");};
 
   const exportPNG=()=>{
@@ -403,11 +406,17 @@ export default function GeoStringApp(){
         const analysisLine=a.contrastLevel?`\n◆ تحليل الصورة: تباين ${a.contrastLevel} • سطوع ${a.brightnessLevel} • تفاصيل ${a.detailDensity}${a.cleanBackground===false?" • خلفية معقدة":""}`:"";
         const summary=`✦ تحليل الصورة\n${parsed.subject?`الموضوع: ${parsed.subject}\n`:""}${parsed.reasoning||""}${analysisLine}\n\n◈ الإعدادات المُطبَّقة تلقائياً:\n• الشكل: ${parsed.shape==="square"?"مربع":"دائري"}\n• المسامير: ${parsed.nails}\n• الخيوط: ${parsed.threads}\n• الفجوة الدنيا: ${parsed.minGap}\n• وزن الخط: ${parsed.lineWeight}\n• التباين: ${parsed.contrast}  •  السطوع: ${parsed.brightness}\n• لون الخيط: ${parsed.threadColor}  •  الخلفية: ${parsed.bgColor}`;
         setAiRes(summary);
-        setTimeout(()=>{ try{ generate&&generate(); }catch{} }, 80);
+        setTimeout(()=>{ try{ generateRef.current?.(); }catch{} }, 200);
       } else {
-        setAiRes(res||"لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
+        setAiRes(res||"⚠️ لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
       }
-    }catch(e){setAiRes("خطأ في الاتصال بالذكاء الاصطناعي. تحقق من الاتصال.");}
+    }catch(e){
+      const msg=String(e?.message||"");
+      let errText="⚠️ خطأ غير متوقع — حاول مرة أخرى";
+      if(msg.includes("quota")||msg.includes("429")) errText="⚠️ تجاوزت الحد اليومي لـ Gemini AI";
+      else if(msg.includes("network")||msg.includes("fetch")||msg.includes("Failed")) errText="⚠️ تحقق من اتصالك بالإنترنت";
+      setAiRes(errText);
+    }
     setAiLoad(false);
   },[image,applySuggestion]);
 
@@ -864,7 +873,7 @@ function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn
           )}
           {aiSuggestion && (
             <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
-              <GBtn onClick={()=>{applySuggestion(aiSuggestion);generate&&generate();}} variant="gold" icon="◈" style={{flex:1,minWidth:160}}>
+              <GBtn onClick={()=>{applySuggestion(aiSuggestion); setTimeout(()=>generate&&generate(),200);}} variant="gold" icon="◈" style={{flex:1,minWidth:160}}>
                 تطبيق وتوليد بأفضل إعدادات
               </GBtn>
               <GBtn onClick={()=>applySuggestion(aiSuggestion)} variant="outline-cyan" icon="↻" style={{flex:1,minWidth:140}}>
@@ -889,11 +898,17 @@ function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn
             </div>
           )}
           {chat.map((m,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:m.r==="user"?"flex-end":"flex-start"}} className="gs-up">
+            <div key={i} style={{display:"flex",justifyContent:m.r==="user"?"flex-start":"flex-end",gap:6,alignItems:"flex-end"}} className="gs-up">
+              {m.r==="ai" && (
+                <div style={{width:24,height:24,borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.cyan})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.bg,fontWeight:700,flexShrink:0}}>G</div>
+              )}
               <div style={{maxWidth:"82%",padding:"9px 13px",borderRadius:m.r==="user"?"12px 12px 4px 12px":"12px 12px 12px 4px",background:m.r==="user"?"rgba(201,168,76,.1)":"rgba(92,189,185,.07)",border:`1px solid ${m.r==="user"?"rgba(201,168,76,.28)":"rgba(92,189,185,.2)"}`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:F.ar}}>
                 {m.r==="ai"&&<div style={{fontFamily:F.mono,fontSize:7,color:C.cyan,marginBottom:4,letterSpacing:"0.8px"}}>◈ GEOSTRING AI</div>}
                 {m.t}
               </div>
+              {m.r==="user" && (
+                <div style={{width:24,height:24,borderRadius:"50%",background:C.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.muted,flexShrink:0}}>أ</div>
+              )}
             </div>
           ))}
           {chatBusy&&(
