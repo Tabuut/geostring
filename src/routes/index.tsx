@@ -210,7 +210,7 @@ function Simulation() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/60">
             <span className="font-mono text-xs text-[var(--cyan)]">{t("sim.live")}</span>
             <a
-              href="https://stringphotokr.dothome.co.kr/indexmaking.html"
+              href="/app"
               target="_blank"
               rel="noreferrer"
               className="text-xs text-[var(--gold)] hover:underline"
@@ -218,23 +218,9 @@ function Simulation() {
               {t("sim.openFull")}
             </a>
           </div>
-          <iframe
-            src="https://stringphotokr.dothome.co.kr/indexmaking.html"
-            title="String Simulation"
-            className="w-full h-[80vh] bg-white"
-          />
-        </div>
-
-        <div className="text-center mt-8">
-          <a
-            href="https://stringphotokr.dothome.co.kr/indexmaking.html"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-lg bg-gradient-to-r from-[var(--cyan)] to-[var(--gold)] text-background font-bold glow-cyan hover:scale-[1.02] transition"
-          >
-            {t("sim.cta")}
-            <span>↗</span>
-          </a>
+          <div style={{ width: "100%", minHeight: "90vh", background: "#0d1117" }}>
+            <GeoStringApp />
+          </div>
         </div>
       </div>
     </section>
