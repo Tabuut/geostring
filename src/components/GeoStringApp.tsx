@@ -702,7 +702,7 @@ export default function GeoStringApp(){
 
             {tab==="preview"&&(
               <div style={{position:"relative",display:"inline-block",maxWidth:"100%"}}>
-                <canvas ref={cvsRef} width={SZ} height={SZ} style={{borderRadius:shape==="circle"?"50%":12,border:`1px solid ${C.border}`,boxShadow:`0 0 80px rgba(92,189,185,.1)`,maxWidth:"100%",height:"auto",maxHeight:isMobile?"75vw":"63vh",display:"block",transition:"border-radius .3s"}}/>
+                <canvas ref={cvsRef} width={SZ} height={SZ} style={{borderRadius:shape==="circle"?"50%":12,border:`1px solid ${C.border}`,boxShadow:status==="done"?undefined:`0 0 80px rgba(92,189,185,.1)`,animation:status==="done"?"gs-glow 2s ease-in-out infinite alternate":undefined,maxWidth:"100%",height:"auto",maxHeight:isMobile?"75vw":"63vh",display:"block",transition:"border-radius .3s"}}/>
                 {status==="idle"&&!seq.length&&<EmptyCanvas shape={shape}/>}
                 {status==="processing"&&(
                   <div style={{position:"absolute",top:12,left:12,background:"rgba(7,14,26,.95)",border:`1px solid ${C.gold}`,borderRadius:20,padding:"4px 12px",fontFamily:F.mono,fontSize:10,color:C.gold,display:"flex",alignItems:"center",gap:7,boxShadow:`0 0 15px rgba(201,168,76,.2)`}}>
