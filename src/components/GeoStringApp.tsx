@@ -248,6 +248,7 @@ export default function GeoStringApp(){
   const fileRef=useRef(null);
   const animRef=useRef(null);
   const seqLinesRef=useRef([]);
+  const generateRef=useRef(null);
 
   useEffect(()=>{
     const el=document.createElement("style");el.textContent=CSS;document.head.appendChild(el);
