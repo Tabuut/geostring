@@ -406,11 +406,17 @@ export default function GeoStringApp(){
         const analysisLine=a.contrastLevel?`\n◆ تحليل الصورة: تباين ${a.contrastLevel} • سطوع ${a.brightnessLevel} • تفاصيل ${a.detailDensity}${a.cleanBackground===false?" • خلفية معقدة":""}`:"";
         const summary=`✦ تحليل الصورة\n${parsed.subject?`الموضوع: ${parsed.subject}\n`:""}${parsed.reasoning||""}${analysisLine}\n\n◈ الإعدادات المُطبَّقة تلقائياً:\n• الشكل: ${parsed.shape==="square"?"مربع":"دائري"}\n• المسامير: ${parsed.nails}\n• الخيوط: ${parsed.threads}\n• الفجوة الدنيا: ${parsed.minGap}\n• وزن الخط: ${parsed.lineWeight}\n• التباين: ${parsed.contrast}  •  السطوع: ${parsed.brightness}\n• لون الخيط: ${parsed.threadColor}  •  الخلفية: ${parsed.bgColor}`;
         setAiRes(summary);
-        setTimeout(()=>{ try{ generate&&generate(); }catch{} }, 80);
+        setTimeout(()=>{ try{ generateRef.current?.(); }catch{} }, 200);
       } else {
-        setAiRes(res||"لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
+        setAiRes(res||"⚠️ لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
       }
-    }catch(e){setAiRes("خطأ في الاتصال بالذكاء الاصطناعي. تحقق من الاتصال.");}
+    }catch(e){
+      const msg=String(e?.message||"");
+      let errText="⚠️ خطأ غير متوقع — حاول مرة أخرى";
+      if(msg.includes("quota")||msg.includes("429")) errText="⚠️ تجاوزت الحد اليومي لـ Gemini AI";
+      else if(msg.includes("network")||msg.includes("fetch")||msg.includes("Failed")) errText="⚠️ تحقق من اتصالك بالإنترنت";
+      setAiRes(errText);
+    }
     setAiLoad(false);
   },[image,applySuggestion]);
 
