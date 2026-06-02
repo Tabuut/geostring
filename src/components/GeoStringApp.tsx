@@ -540,6 +540,13 @@ export default function GeoStringApp(){
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{display:"none"}}/>
 
+                {imgData&&(
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",fontFamily:F.mono,fontSize:8,color:C.muted}}>
+                    <span style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 7px"}}>{SZ}×{SZ} px</span>
+                    <span style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 7px",color:C.cyan}}>جاهز ✓</span>
+                  </div>
+                )}
+
                 {image&&(
                   <GBtn onClick={runAI} disabled={aiLoad} variant="gold" icon={aiLoad?<Spin size={11} color={C.bg}/>:"✦"}>
                     {aiLoad?"جاري التحليل...":"تحليل بالذكاء الاصطناعي"}
