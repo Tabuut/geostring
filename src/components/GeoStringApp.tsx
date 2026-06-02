@@ -873,7 +873,7 @@ function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn
           )}
           {aiSuggestion && (
             <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
-              <GBtn onClick={()=>{applySuggestion(aiSuggestion);generate&&generate();}} variant="gold" icon="◈" style={{flex:1,minWidth:160}}>
+              <GBtn onClick={()=>{applySuggestion(aiSuggestion); setTimeout(()=>generateRef.current?.(),200);}} variant="gold" icon="◈" style={{flex:1,minWidth:160}}>
                 تطبيق وتوليد بأفضل إعدادات
               </GBtn>
               <GBtn onClick={()=>applySuggestion(aiSuggestion)} variant="outline-cyan" icon="↻" style={{flex:1,minWidth:140}}>
