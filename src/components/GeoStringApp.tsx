@@ -558,13 +558,7 @@ export default function GeoStringApp(){
                 <div style={{height:1,background:C.border,margin:"4px 0"}}/>
                 <SLabel tag="03" text="التنفيذ"/>
                 {status==="processing"?(
-                  <>
-                    <div style={{height:4,borderRadius:4,background:C.border,overflow:"hidden",margin:"2px 0"}}>
-                      <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${C.gold},${C.gold2})`,transition:"width .4s",borderRadius:4}}/>
-                    </div>
-                    <div style={{fontFamily:F.mono,fontSize:9,color:C.muted,textAlign:"center"}}>{liveCount.toLocaleString()} / {threadCnt.toLocaleString()} threads</div>
-                    <GBtn onClick={stop} variant="outline-cyan">⏹ إيقاف</GBtn>
-                  </>
+                  <GenerationProgress prog={prog} liveCount={liveCount} threadCnt={threadCnt} onStop={stop}/>
                 ):(
                   <GBtn onClick={generate} disabled={!imgData} variant={imgData?"primary":"disabled"} icon="◈">
                     {status==="done"?"◈ إعادة التوليد":"◈ توليد الأوتار"}
