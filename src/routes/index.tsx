@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
+import GeoStringApp from "@/components/GeoStringApp";
 
 export const Route = createFileRoute("/")({
   head: () => ({
