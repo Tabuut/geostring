@@ -352,6 +352,26 @@ export default function GeoStringApp(){
 
   const stop=()=>{if(animRef.current) cancelAnimationFrame(animRef.current);setStatus("done");};
 
+  // Toast on completion
+  useEffect(()=>{
+    if(status==="done" && seq.length>1){
+      setToast(`✓ تم توليد ${(seq.length-1).toLocaleString()} خيط — جاهز للتصدير`);
+      const t=setTimeout(()=>setToast(null),3500);
+      return ()=>clearTimeout(t);
+    }
+  },[status,seq.length]);
+
+  // Keyboard shortcuts
+  useEffect(()=>{
+    const handler=(e)=>{
+      if((e.ctrlKey||e.metaKey) && e.key==="Enter"){ e.preventDefault(); generateRef.current?.(); }
+      else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); exportPNG(); }
+      else if(e.key==="Escape" && status==="processing"){ stop(); }
+    };
+    document.addEventListener("keydown",handler);
+    return()=>document.removeEventListener("keydown",handler);
+  },[status]);
+
   const exportPNG=()=>{
     if(!cvsRef.current) return;
     const a=document.createElement("a");a.download="geostring_art.png";
