@@ -898,11 +898,17 @@ function AiPanel({aiLoad,aiRes,aiSuggestion,applySuggestion,generate,chat,chatIn
             </div>
           )}
           {chat.map((m,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:m.r==="user"?"flex-end":"flex-start"}} className="gs-up">
+            <div key={i} style={{display:"flex",justifyContent:m.r==="user"?"flex-start":"flex-end",gap:6,alignItems:"flex-end"}} className="gs-up">
+              {m.r==="ai" && (
+                <div style={{width:24,height:24,borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.cyan})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.bg,fontWeight:700,flexShrink:0}}>G</div>
+              )}
               <div style={{maxWidth:"82%",padding:"9px 13px",borderRadius:m.r==="user"?"12px 12px 4px 12px":"12px 12px 12px 4px",background:m.r==="user"?"rgba(201,168,76,.1)":"rgba(92,189,185,.07)",border:`1px solid ${m.r==="user"?"rgba(201,168,76,.28)":"rgba(92,189,185,.2)"}`,fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:F.ar}}>
                 {m.r==="ai"&&<div style={{fontFamily:F.mono,fontSize:7,color:C.cyan,marginBottom:4,letterSpacing:"0.8px"}}>◈ GEOSTRING AI</div>}
                 {m.t}
               </div>
+              {m.r==="user" && (
+                <div style={{width:24,height:24,borderRadius:"50%",background:C.border,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:C.muted,flexShrink:0}}>أ</div>
+              )}
             </div>
           ))}
           {chatBusy&&(
