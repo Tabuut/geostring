@@ -631,6 +631,19 @@ export default function GeoStringApp(){
                     ))}
                   </div>
                 </div>
+
+                <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
+                  <GBtn
+                    onClick={()=>{
+                      setNailCnt(200);setThreadCnt(3000);setShape("circle");
+                      setMinGap(20);setLineWeight(0.3);setContrast(1.0);
+                      setBrightness(0.0);setThreadColor("#1a1a2e");setBgColor("#ffffff");
+                    }}
+                    variant="outline-gold" icon="↺"
+                  >
+                    إعادة ضبط الإعدادات
+                  </GBtn>
+                </div>
               </div>
             )}
 
