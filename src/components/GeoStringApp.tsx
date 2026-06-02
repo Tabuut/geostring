@@ -834,13 +834,79 @@ function EmptyCanvas({shape}){
 }
 
 /* ══════ STEPS PANEL ══════ */
-function StepsPanel({seq,nailCnt,shape}){
+function GenerationProgress({prog,liveCount,threadCnt,onStop}){
+  const [phraseIdx,setPhraseIdx]=useState(0);
+  const [startTime]=useState(Date.now());
+  const [eta,setEta]=useState(null);
+  const phrases=useMemo(()=>[
+    "يرسم خيطاً بخيط...",
+    "يحسب أفضل مسار...",
+    "يبني لوحتك الفنية...",
+    "يحوّل الصورة إلى هندسة...",
+    "يمدّ الخيط الأمثل...",
+    "يحوّل الضوء إلى أوتار...",
+  ],[]);
+  useEffect(()=>{
+    const id=setInterval(()=>setPhraseIdx(i=>(i+1)%phrases.length),2800);
+    return()=>clearInterval(id);
+  },[phrases.length]);
+  useEffect(()=>{
+    if(liveCount>100){
+      const elapsed=(Date.now()-startTime)/1000;
+      const speed=liveCount/elapsed;
+      const remaining=Math.max(0,threadCnt-liveCount);
+      setEta(Math.max(1,Math.round(remaining/speed)));
+    }
+  },[liveCount,threadCnt,startTime]);
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{height:6,borderRadius:6,background:C.border,overflow:"hidden",position:"relative"}}>
+        <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${C.gold},${C.gold2})`,borderRadius:6,transition:"width .4s",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,transparent 0%,rgba(255,255,255,.35) 50%,transparent 100%)",backgroundSize:"200% 100%",animation:"gs-shine 1.5s linear infinite"}}/>
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontFamily:F.mono,fontSize:9,color:C.muted}}>
+        <span style={{color:C.gold}}>{liveCount.toLocaleString()}</span>
+        <span>/ {threadCnt.toLocaleString()} thread</span>
+        {eta!==null&&<span>~{eta}ث</span>}
+      </div>
+      <div key={phraseIdx} className="gs-up" style={{fontFamily:F.ar,fontSize:11,color:C.muted,textAlign:"center",minHeight:18}}>
+        {phrases[phraseIdx]}
+      </div>
+      <GBtn onClick={onStop} variant="outline-cyan" icon="⏹">إيقاف التوليد</GBtn>
+    </div>
+  );
+}
+
+function StepsPanel({seq,nailCnt,shape,nails}){
+  const [search,setSearch]=useState("");
+  const [copied,setCopied]=useState(false);
   if(!seq.length) return(
     <div style={{textAlign:"center",color:C.muted,fontFamily:F.mono,fontSize:10,flexDirection:"column",display:"flex",alignItems:"center",gap:8}}>
       <div style={{fontFamily:F.disp,fontSize:48,color:C.border}}>≡</div>
       قم بالتوليد أولاً لعرض الخطوات
     </div>
   );
+  const filtered=search
+    ? seq.slice(1).reduce((acc,n,i)=>{
+        if(String(seq[i]).includes(search)||String(n).includes(search)) acc.push([i,seq[i],n]);
+        return acc;
+      },[]).slice(0,400)
+    : seq.slice(1,201).map((n,i)=>[i,seq[i],n]);
+
+  const distances=(nails&&seq.length>1)?seq.slice(1).map((n,i)=>{
+    const[x0,y0]=nails[seq[i]]||[0,0];
+    const[x1,y1]=nails[n]||[0,0];
+    return Math.round(Math.sqrt((x1-x0)**2+(y1-y0)**2));
+  }):[];
+  const avgDist=distances.length?Math.round(distances.reduce((a,b)=>a+b,0)/distances.length):0;
+  const maxDist=distances.length?Math.max(...distances):0;
+  const minDist=distances.length?Math.min(...distances):0;
+
+  const copyAll=async()=>{
+    const txt=seq.slice(1).map((n,i)=>`${i+1}: ${seq[i]} → ${n}`).join("\n");
+    try{ await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(()=>setCopied(false),2000); }catch{}
+  };
   return(
     <div style={{width:"100%",maxWidth:560,display:"flex",flexDirection:"column",gap:12}}>
       <div style={{display:"flex",gap:8}}>
@@ -851,23 +917,50 @@ function StepsPanel({seq,nailCnt,shape}){
           </div>
         ))}
       </div>
+
+      {distances.length>0&&(
+        <div style={{display:"flex",gap:8,padding:"10px",background:C.card,border:`1px solid ${C.border}`,borderRadius:8}}>
+          {[["متوسط",avgDist],["أطول",maxDist],["أقصر",minDist]].map(([l,v])=>(
+            <div key={l} style={{flex:1,textAlign:"center"}}>
+              <div style={{fontFamily:F.mono,fontSize:8,color:C.muted}}>{l}</div>
+              <div style={{fontFamily:F.disp,fontSize:14,color:C.gold,fontWeight:700}}>{v}px</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{display:"flex",gap:8}}>
+        <input
+          value={search}
+          onChange={e=>setSearch(e.target.value.replace(/[^0-9]/g,""))}
+          placeholder="ابحث عن رقم مسمار..."
+          style={{flex:1,background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px 12px",color:C.text,fontFamily:F.mono,fontSize:11,outline:"none",direction:"rtl"}}
+        />
+        <button onClick={copyAll} style={{fontFamily:F.mono,fontSize:9,color:copied?C.cyan:C.muted,background:"none",border:`1px solid ${copied?C.cyan:C.border}`,borderRadius:5,padding:"3px 10px",cursor:"pointer",whiteSpace:"nowrap"}}>
+          {copied?"تم النسخ ✓":"نسخ الكل ⎘"}
+        </button>
+      </div>
+
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
         <div style={{padding:"10px 16px",borderBottom:`1px solid ${C.border}`,background:C.bg2,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontFamily:F.disp,fontSize:12,fontWeight:700,letterSpacing:"0.08em",color:C.text}}>NAIL SEQUENCE</span>
-          <span style={{fontFamily:F.mono,fontSize:9,color:C.gold}}>{seq.length-1} STEPS (SHOWING FIRST 200)</span>
+          <span style={{fontFamily:F.mono,fontSize:9,color:C.gold}}>{search?`${filtered.length} MATCH`:`${seq.length-1} STEPS (FIRST 200)`}</span>
         </div>
-        <div style={{maxHeight:440,overflowY:"auto"}}>
-          {seq.slice(1,201).map((n,i)=>(
+        <div style={{maxHeight:380,overflowY:"auto"}}>
+          {filtered.map(([i,a,b])=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"5px 16px",borderBottom:`1px solid rgba(48,54,61,.35)`,background:i%2===0?"transparent":"rgba(255,255,255,.01)"}}>
               <span style={{fontFamily:F.mono,fontSize:8,color:C.border,width:32,textAlign:"center"}}>{String(i+1).padStart(3,"0")}</span>
-              <NailTag n={seq[i]}/><span style={{color:C.border,fontFamily:F.mono,fontSize:10}}>→</span><NailTag n={n} accent/>
+              <NailTag n={a}/><span style={{color:C.border,fontFamily:F.mono,fontSize:10}}>→</span><NailTag n={b} accent/>
               <span style={{fontFamily:F.mono,fontSize:8,color:C.border,marginRight:"auto"}}>#{i+2}</span>
             </div>
           ))}
-          {seq.length>201&&(
+          {!search&&seq.length>201&&(
             <div style={{padding:"10px",fontFamily:F.mono,fontSize:9,color:C.muted,textAlign:"center",borderTop:`1px solid ${C.border}`}}>
-              + {(seq.length-201).toLocaleString()} خطوة إضافية — صدّر الملف النصي للعرض الكامل
+              + {(seq.length-201).toLocaleString()} خطوة إضافية — استخدم البحث أو صدّر الملف النصي للعرض الكامل
             </div>
+          )}
+          {search&&filtered.length===0&&(
+            <div style={{padding:"20px",fontFamily:F.mono,fontSize:10,color:C.muted,textAlign:"center"}}>لا توجد نتائج</div>
           )}
         </div>
       </div>
