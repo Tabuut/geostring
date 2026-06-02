@@ -187,6 +187,8 @@ const CSS=`
 @keyframes gs-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes gs-orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.05)}}
 @keyframes gs-shimmer{0%{opacity:.4}50%{opacity:.9}100%{opacity:.4}}
+@keyframes gs-shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes gs-glow{from{box-shadow:0 0 0 2px #c9a84c,0 0 30px rgba(201,168,76,.25),0 0 60px rgba(201,168,76,.1)}to{box-shadow:0 0 0 2px #5cbdb9,0 0 40px rgba(92,189,185,.3),0 0 80px rgba(92,189,185,.15)}}
 .gs-up{animation:gs-fadeUp .25s ease forwards;}
 .gs-drop:hover{border-color:rgba(201,168,76,.6)!important;background:rgba(201,168,76,.04)!important;}
 .gs-drop.drag{border-color:#c9a84c!important;background:rgba(201,168,76,.08)!important;}
@@ -240,6 +242,7 @@ export default function GeoStringApp(){
   const [chatBusy,setChatBusy]=useState(false);
   // Drag
   const [dragging,setDragging]=useState(false);
+  const [toast,setToast]=useState(null);
 
   const chatEndRef=useRef(null);
   const cvsRef=useRef(null);
@@ -348,6 +351,26 @@ export default function GeoStringApp(){
   useEffect(()=>{ generateRef.current=generate; },[generate]);
 
   const stop=()=>{if(animRef.current) cancelAnimationFrame(animRef.current);setStatus("done");};
+
+  // Toast on completion
+  useEffect(()=>{
+    if(status==="done" && seq.length>1){
+      setToast(`✓ تم توليد ${(seq.length-1).toLocaleString()} خيط — جاهز للتصدير`);
+      const t=setTimeout(()=>setToast(null),3500);
+      return ()=>clearTimeout(t);
+    }
+  },[status,seq.length]);
+
+  // Keyboard shortcuts
+  useEffect(()=>{
+    const handler=(e)=>{
+      if((e.ctrlKey||e.metaKey) && e.key==="Enter"){ e.preventDefault(); generateRef.current?.(); }
+      else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); exportPNG(); }
+      else if(e.key==="Escape" && status==="processing"){ stop(); }
+    };
+    document.addEventListener("keydown",handler);
+    return()=>document.removeEventListener("keydown",handler);
+  },[status]);
 
   const exportPNG=()=>{
     if(!cvsRef.current) return;
@@ -517,6 +540,13 @@ export default function GeoStringApp(){
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{display:"none"}}/>
 
+                {imgData&&(
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",fontFamily:F.mono,fontSize:8,color:C.muted}}>
+                    <span style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 7px"}}>{SZ}×{SZ} px</span>
+                    <span style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 7px",color:C.cyan}}>جاهز ✓</span>
+                  </div>
+                )}
+
                 {image&&(
                   <GBtn onClick={runAI} disabled={aiLoad} variant="gold" icon={aiLoad?<Spin size={11} color={C.bg}/>:"✦"}>
                     {aiLoad?"جاري التحليل...":"تحليل بالذكاء الاصطناعي"}
@@ -535,13 +565,7 @@ export default function GeoStringApp(){
                 <div style={{height:1,background:C.border,margin:"4px 0"}}/>
                 <SLabel tag="03" text="التنفيذ"/>
                 {status==="processing"?(
-                  <>
-                    <div style={{height:4,borderRadius:4,background:C.border,overflow:"hidden",margin:"2px 0"}}>
-                      <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${C.gold},${C.gold2})`,transition:"width .4s",borderRadius:4}}/>
-                    </div>
-                    <div style={{fontFamily:F.mono,fontSize:9,color:C.muted,textAlign:"center"}}>{liveCount.toLocaleString()} / {threadCnt.toLocaleString()} threads</div>
-                    <GBtn onClick={stop} variant="outline-cyan">⏹ إيقاف</GBtn>
-                  </>
+                  <GenerationProgress prog={prog} liveCount={liveCount} threadCnt={threadCnt} onStop={stop}/>
                 ):(
                   <GBtn onClick={generate} disabled={!imgData} variant={imgData?"primary":"disabled"} icon="◈">
                     {status==="done"?"◈ إعادة التوليد":"◈ توليد الأوتار"}
@@ -607,6 +631,19 @@ export default function GeoStringApp(){
                     ))}
                   </div>
                 </div>
+
+                <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4}}>
+                  <GBtn
+                    onClick={()=>{
+                      setNailCnt(200);setThreadCnt(3000);setShape("circle");
+                      setMinGap(20);setLineWeight(0.3);setContrast(1.0);
+                      setBrightness(0.0);setThreadColor("#1a1a2e");setBgColor("#ffffff");
+                    }}
+                    variant="outline-gold" icon="↺"
+                  >
+                    إعادة ضبط الإعدادات
+                  </GBtn>
+                </div>
               </div>
             )}
 
@@ -665,7 +702,7 @@ export default function GeoStringApp(){
 
             {tab==="preview"&&(
               <div style={{position:"relative",display:"inline-block",maxWidth:"100%"}}>
-                <canvas ref={cvsRef} width={SZ} height={SZ} style={{borderRadius:shape==="circle"?"50%":12,border:`1px solid ${C.border}`,boxShadow:`0 0 80px rgba(92,189,185,.1)`,maxWidth:"100%",height:"auto",maxHeight:isMobile?"75vw":"63vh",display:"block",transition:"border-radius .3s"}}/>
+                <canvas ref={cvsRef} width={SZ} height={SZ} style={{borderRadius:shape==="circle"?"50%":12,border:`1px solid ${C.border}`,boxShadow:status==="done"?undefined:`0 0 80px rgba(92,189,185,.1)`,animation:status==="done"?"gs-glow 2s ease-in-out infinite alternate":undefined,maxWidth:"100%",height:"auto",maxHeight:isMobile?"75vw":"63vh",display:"block",transition:"border-radius .3s"}}/>
                 {status==="idle"&&!seq.length&&<EmptyCanvas shape={shape}/>}
                 {status==="processing"&&(
                   <div style={{position:"absolute",top:12,left:12,background:"rgba(7,14,26,.95)",border:`1px solid ${C.gold}`,borderRadius:20,padding:"4px 12px",fontFamily:F.mono,fontSize:10,color:C.gold,display:"flex",alignItems:"center",gap:7,boxShadow:`0 0 15px rgba(201,168,76,.2)`}}>
@@ -696,7 +733,7 @@ export default function GeoStringApp(){
               </div>
             )}
 
-            {tab==="steps"&&<StepsPanel seq={seq} nailCnt={nailCnt} shape={shape}/>}
+            {tab==="steps"&&<StepsPanel seq={seq} nailCnt={nailCnt} shape={shape} nails={nails}/>}
             {tab==="ai"&&<AiPanel aiLoad={aiLoad} aiRes={aiRes} aiSuggestion={aiSuggestion} applySuggestion={applySuggestion} generate={generate} chat={chat} chatIn={chatIn} setChatIn={setChatIn} chatBusy={chatBusy} sendChat={sendChat} onKey={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} chatEndRef={chatEndRef} hasImg={!!image} runAI={runAI}/>}
           </div>
         </main>
@@ -708,7 +745,26 @@ export default function GeoStringApp(){
           <span style={{fontFamily:F.mono,fontSize:7,color:"rgba(48,54,61,.8)",letterSpacing:"0.5px"}}>GEOSTRING STRING ART ENGINE · منظومة هندسة الأوتار</span>
           {seq.length>1&&<><span style={{fontFamily:F.mono,fontSize:7,color:C.gold}}>✓ {seq.length-1} THREADS</span><span style={{fontFamily:F.mono,fontSize:7,color:C.cyan}}>· {nailCnt} NAILS</span></>}
           <span style={{marginRight:"auto",fontFamily:F.mono,fontSize:7,color:"rgba(48,54,61,.8)"}}>POWERED BY ARTIFICIAL INTELLIGENCE · GEOSTRING © 2025</span>
+          <span title="⌨ Ctrl+Enter: توليد  |  Ctrl+S: تصدير PNG  |  Esc: إيقاف" style={{cursor:"help",fontFamily:F.mono,fontSize:9,color:C.border}}>⌨</span>
         </div>
+      )}
+
+      {/* Toast */}
+      {toast&&(
+        <div className="gs-up" style={{position:"fixed",top:70,left:"50%",transform:"translateX(-50%)",zIndex:100,background:"rgba(13,17,23,.97)",border:`1px solid ${C.gold}`,borderRadius:20,padding:"8px 20px",fontFamily:F.mono,fontSize:11,color:C.gold,whiteSpace:"nowrap",boxShadow:`0 0 20px rgba(201,168,76,.2)`,pointerEvents:"none"}}>
+          {toast}
+        </div>
+      )}
+
+      {/* Mobile FAB */}
+      {isMobile && status!=="processing" && (
+        <button
+          onClick={()=>imgData?generate():fileRef.current?.click()}
+          title={imgData?"توليد":"ارفع صورة"}
+          style={{position:"fixed",bottom:24,left:24,width:52,height:52,borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.gold2})`,border:"none",color:C.bg,fontSize:22,cursor:"pointer",boxShadow:`0 4px 20px rgba(201,168,76,.4)`,display:"flex",alignItems:"center",justifyContent:"center",zIndex:40}}
+        >
+          {imgData?"◈":"⊡"}
+        </button>
       )}
     </div>
   );
@@ -778,13 +834,79 @@ function EmptyCanvas({shape}){
 }
 
 /* ══════ STEPS PANEL ══════ */
-function StepsPanel({seq,nailCnt,shape}){
+function GenerationProgress({prog,liveCount,threadCnt,onStop}){
+  const [phraseIdx,setPhraseIdx]=useState(0);
+  const [startTime]=useState(Date.now());
+  const [eta,setEta]=useState(null);
+  const phrases=useMemo(()=>[
+    "يرسم خيطاً بخيط...",
+    "يحسب أفضل مسار...",
+    "يبني لوحتك الفنية...",
+    "يحوّل الصورة إلى هندسة...",
+    "يمدّ الخيط الأمثل...",
+    "يحوّل الضوء إلى أوتار...",
+  ],[]);
+  useEffect(()=>{
+    const id=setInterval(()=>setPhraseIdx(i=>(i+1)%phrases.length),2800);
+    return()=>clearInterval(id);
+  },[phrases.length]);
+  useEffect(()=>{
+    if(liveCount>100){
+      const elapsed=(Date.now()-startTime)/1000;
+      const speed=liveCount/elapsed;
+      const remaining=Math.max(0,threadCnt-liveCount);
+      setEta(Math.max(1,Math.round(remaining/speed)));
+    }
+  },[liveCount,threadCnt,startTime]);
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{height:6,borderRadius:6,background:C.border,overflow:"hidden",position:"relative"}}>
+        <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${C.gold},${C.gold2})`,borderRadius:6,transition:"width .4s",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,transparent 0%,rgba(255,255,255,.35) 50%,transparent 100%)",backgroundSize:"200% 100%",animation:"gs-shine 1.5s linear infinite"}}/>
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontFamily:F.mono,fontSize:9,color:C.muted}}>
+        <span style={{color:C.gold}}>{liveCount.toLocaleString()}</span>
+        <span>/ {threadCnt.toLocaleString()} thread</span>
+        {eta!==null&&<span>~{eta}ث</span>}
+      </div>
+      <div key={phraseIdx} className="gs-up" style={{fontFamily:F.ar,fontSize:11,color:C.muted,textAlign:"center",minHeight:18}}>
+        {phrases[phraseIdx]}
+      </div>
+      <GBtn onClick={onStop} variant="outline-cyan" icon="⏹">إيقاف التوليد</GBtn>
+    </div>
+  );
+}
+
+function StepsPanel({seq,nailCnt,shape,nails}){
+  const [search,setSearch]=useState("");
+  const [copied,setCopied]=useState(false);
   if(!seq.length) return(
     <div style={{textAlign:"center",color:C.muted,fontFamily:F.mono,fontSize:10,flexDirection:"column",display:"flex",alignItems:"center",gap:8}}>
       <div style={{fontFamily:F.disp,fontSize:48,color:C.border}}>≡</div>
       قم بالتوليد أولاً لعرض الخطوات
     </div>
   );
+  const filtered=search
+    ? seq.slice(1).reduce((acc,n,i)=>{
+        if(String(seq[i]).includes(search)||String(n).includes(search)) acc.push([i,seq[i],n]);
+        return acc;
+      },[]).slice(0,400)
+    : seq.slice(1,201).map((n,i)=>[i,seq[i],n]);
+
+  const distances=(nails&&seq.length>1)?seq.slice(1).map((n,i)=>{
+    const[x0,y0]=nails[seq[i]]||[0,0];
+    const[x1,y1]=nails[n]||[0,0];
+    return Math.round(Math.sqrt((x1-x0)**2+(y1-y0)**2));
+  }):[];
+  const avgDist=distances.length?Math.round(distances.reduce((a,b)=>a+b,0)/distances.length):0;
+  const maxDist=distances.length?Math.max(...distances):0;
+  const minDist=distances.length?Math.min(...distances):0;
+
+  const copyAll=async()=>{
+    const txt=seq.slice(1).map((n,i)=>`${i+1}: ${seq[i]} → ${n}`).join("\n");
+    try{ await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(()=>setCopied(false),2000); }catch{}
+  };
   return(
     <div style={{width:"100%",maxWidth:560,display:"flex",flexDirection:"column",gap:12}}>
       <div style={{display:"flex",gap:8}}>
@@ -795,23 +917,50 @@ function StepsPanel({seq,nailCnt,shape}){
           </div>
         ))}
       </div>
+
+      {distances.length>0&&(
+        <div style={{display:"flex",gap:8,padding:"10px",background:C.card,border:`1px solid ${C.border}`,borderRadius:8}}>
+          {[["متوسط",avgDist],["أطول",maxDist],["أقصر",minDist]].map(([l,v])=>(
+            <div key={l} style={{flex:1,textAlign:"center"}}>
+              <div style={{fontFamily:F.mono,fontSize:8,color:C.muted}}>{l}</div>
+              <div style={{fontFamily:F.disp,fontSize:14,color:C.gold,fontWeight:700}}>{v}px</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{display:"flex",gap:8}}>
+        <input
+          value={search}
+          onChange={e=>setSearch(e.target.value.replace(/[^0-9]/g,""))}
+          placeholder="ابحث عن رقم مسمار..."
+          style={{flex:1,background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px 12px",color:C.text,fontFamily:F.mono,fontSize:11,outline:"none",direction:"rtl"}}
+        />
+        <button onClick={copyAll} style={{fontFamily:F.mono,fontSize:9,color:copied?C.cyan:C.muted,background:"none",border:`1px solid ${copied?C.cyan:C.border}`,borderRadius:5,padding:"3px 10px",cursor:"pointer",whiteSpace:"nowrap"}}>
+          {copied?"تم النسخ ✓":"نسخ الكل ⎘"}
+        </button>
+      </div>
+
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,overflow:"hidden"}}>
         <div style={{padding:"10px 16px",borderBottom:`1px solid ${C.border}`,background:C.bg2,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontFamily:F.disp,fontSize:12,fontWeight:700,letterSpacing:"0.08em",color:C.text}}>NAIL SEQUENCE</span>
-          <span style={{fontFamily:F.mono,fontSize:9,color:C.gold}}>{seq.length-1} STEPS (SHOWING FIRST 200)</span>
+          <span style={{fontFamily:F.mono,fontSize:9,color:C.gold}}>{search?`${filtered.length} MATCH`:`${seq.length-1} STEPS (FIRST 200)`}</span>
         </div>
-        <div style={{maxHeight:440,overflowY:"auto"}}>
-          {seq.slice(1,201).map((n,i)=>(
+        <div style={{maxHeight:380,overflowY:"auto"}}>
+          {filtered.map(([i,a,b])=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"5px 16px",borderBottom:`1px solid rgba(48,54,61,.35)`,background:i%2===0?"transparent":"rgba(255,255,255,.01)"}}>
               <span style={{fontFamily:F.mono,fontSize:8,color:C.border,width:32,textAlign:"center"}}>{String(i+1).padStart(3,"0")}</span>
-              <NailTag n={seq[i]}/><span style={{color:C.border,fontFamily:F.mono,fontSize:10}}>→</span><NailTag n={n} accent/>
+              <NailTag n={a}/><span style={{color:C.border,fontFamily:F.mono,fontSize:10}}>→</span><NailTag n={b} accent/>
               <span style={{fontFamily:F.mono,fontSize:8,color:C.border,marginRight:"auto"}}>#{i+2}</span>
             </div>
           ))}
-          {seq.length>201&&(
+          {!search&&seq.length>201&&(
             <div style={{padding:"10px",fontFamily:F.mono,fontSize:9,color:C.muted,textAlign:"center",borderTop:`1px solid ${C.border}`}}>
-              + {(seq.length-201).toLocaleString()} خطوة إضافية — صدّر الملف النصي للعرض الكامل
+              + {(seq.length-201).toLocaleString()} خطوة إضافية — استخدم البحث أو صدّر الملف النصي للعرض الكامل
             </div>
+          )}
+          {search&&filtered.length===0&&(
+            <div style={{padding:"20px",fontFamily:F.mono,fontSize:10,color:C.muted,textAlign:"center"}}>لا توجد نتائج</div>
           )}
         </div>
       </div>
