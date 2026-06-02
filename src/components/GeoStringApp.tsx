@@ -345,6 +345,8 @@ export default function GeoStringApp(){
     animRef.current=requestAnimationFrame(tick);
   },[imgData,nails,threadCnt,minGap,lineWeight,contrast,brightness,threadColor,bgColor,draw]);
 
+  useEffect(()=>{ generateRef.current=generate; },[generate]);
+
   const stop=()=>{if(animRef.current) cancelAnimationFrame(animRef.current);setStatus("done");};
 
   const exportPNG=()=>{
