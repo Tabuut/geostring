@@ -187,6 +187,8 @@ const CSS=`
 @keyframes gs-fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes gs-orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-20px) scale(1.05)}}
 @keyframes gs-shimmer{0%{opacity:.4}50%{opacity:.9}100%{opacity:.4}}
+@keyframes gs-shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes gs-glow{from{box-shadow:0 0 0 2px #c9a84c,0 0 30px rgba(201,168,76,.25),0 0 60px rgba(201,168,76,.1)}to{box-shadow:0 0 0 2px #5cbdb9,0 0 40px rgba(92,189,185,.3),0 0 80px rgba(92,189,185,.15)}}
 .gs-up{animation:gs-fadeUp .25s ease forwards;}
 .gs-drop:hover{border-color:rgba(201,168,76,.6)!important;background:rgba(201,168,76,.04)!important;}
 .gs-drop.drag{border-color:#c9a84c!important;background:rgba(201,168,76,.08)!important;}
