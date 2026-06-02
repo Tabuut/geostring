@@ -745,7 +745,26 @@ export default function GeoStringApp(){
           <span style={{fontFamily:F.mono,fontSize:7,color:"rgba(48,54,61,.8)",letterSpacing:"0.5px"}}>GEOSTRING STRING ART ENGINE · منظومة هندسة الأوتار</span>
           {seq.length>1&&<><span style={{fontFamily:F.mono,fontSize:7,color:C.gold}}>✓ {seq.length-1} THREADS</span><span style={{fontFamily:F.mono,fontSize:7,color:C.cyan}}>· {nailCnt} NAILS</span></>}
           <span style={{marginRight:"auto",fontFamily:F.mono,fontSize:7,color:"rgba(48,54,61,.8)"}}>POWERED BY ARTIFICIAL INTELLIGENCE · GEOSTRING © 2025</span>
+          <span title="⌨ Ctrl+Enter: توليد  |  Ctrl+S: تصدير PNG  |  Esc: إيقاف" style={{cursor:"help",fontFamily:F.mono,fontSize:9,color:C.border}}>⌨</span>
         </div>
+      )}
+
+      {/* Toast */}
+      {toast&&(
+        <div className="gs-up" style={{position:"fixed",top:70,left:"50%",transform:"translateX(-50%)",zIndex:100,background:"rgba(13,17,23,.97)",border:`1px solid ${C.gold}`,borderRadius:20,padding:"8px 20px",fontFamily:F.mono,fontSize:11,color:C.gold,whiteSpace:"nowrap",boxShadow:`0 0 20px rgba(201,168,76,.2)`,pointerEvents:"none"}}>
+          {toast}
+        </div>
+      )}
+
+      {/* Mobile FAB */}
+      {isMobile && status!=="processing" && (
+        <button
+          onClick={()=>imgData?generate():fileRef.current?.click()}
+          title={imgData?"توليد":"ارفع صورة"}
+          style={{position:"fixed",bottom:24,left:24,width:52,height:52,borderRadius:"50%",background:`linear-gradient(135deg,${C.gold},${C.gold2})`,border:"none",color:C.bg,fontSize:22,cursor:"pointer",boxShadow:`0 4px 20px rgba(201,168,76,.4)`,display:"flex",alignItems:"center",justifyContent:"center",zIndex:40}}
+        >
+          {imgData?"◈":"⊡"}
+        </button>
       )}
     </div>
   );
