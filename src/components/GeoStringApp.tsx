@@ -34,7 +34,7 @@ const F = {
    AI (Gemini)
    ══════════════════════════════════════════════ */
  async function askGemini(prompt, b64 = null, opts = {}) {
-  const GEMINI_KEY = "AIzaSyC-bWI_7YA3vZTP7NxfS7Utgl0lQhYJDQA";
+  const GEMINI_KEY = "AQ.Ab8RN6JpEb-P1EwRQdpt-S7rnqgev1buvMCGH_TijDIOHfi-YA";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
 
   const parts: any[] = [];
