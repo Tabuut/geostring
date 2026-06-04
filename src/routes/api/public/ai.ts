@@ -12,73 +12,71 @@ export const Route = createFileRoute("/api/public/ai")({
       OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
         try {
-          const apiKey = process.env.LOVABLE_API_KEY;
+          const apiKey = process.env.GEMINI_API_KEY;
           if (!apiKey) {
-            return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
-              status: 500,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            });
+            return new Response(
+              JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
+              { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+            );
           }
 
-          const { prompt, imageBase64, temperature, maxOutputTokens, responseMimeType } =
+          const { prompt, imageBase64, temperature, maxOutputTokens } =
             await request.json();
 
           if (!prompt || typeof prompt !== "string") {
-            return new Response(JSON.stringify({ error: "prompt is required" }), {
-              status: 400,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            });
+            return new Response(
+              JSON.stringify({ error: "prompt is required" }),
+              { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+            );
           }
 
-          const content: any[] = [{ type: "text", text: prompt }];
+          const parts: any[] = [];
           if (imageBase64 && typeof imageBase64 === "string") {
-            content.unshift({
-              type: "image_url",
-              image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+            parts.push({
+              inlineData: { mimeType: "image/jpeg", data: imageBase64 },
             });
           }
+          parts.push({ text: prompt });
 
-          const body: any = {
-            model: "google/gemini-2.5-flash",
-            messages: [{ role: "user", content }],
-            temperature: temperature ?? 0.7,
-            max_tokens: maxOutputTokens ?? 1024,
-          };
-          if (responseMimeType === "application/json") {
-            body.response_format = { type: "json_object" };
-          }
-
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
+          const body = {
+            contents: [{ parts }],
+            generationConfig: {
+              temperature: temperature ?? 0.7,
+              maxOutputTokens: maxOutputTokens ?? 1024,
             },
+          };
+
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+          const upstream = await fetch(geminiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
 
           if (!upstream.ok) {
             const txt = await upstream.text();
             const status = upstream.status;
-            let msg = "AI gateway error";
+            let msg = "Gemini API error";
             if (status === 429) msg = "تجاوزت حد الطلبات، حاول لاحقاً.";
-            else if (status === 402) msg = "نفذت الأرصدة، أضف رصيداً لمساحة العمل.";
-            return new Response(JSON.stringify({ error: msg, detail: txt }), {
-              status,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            });
+            else if (status === 403) msg = "مفتاح Gemini API غير صحيح.";
+            return new Response(
+              JSON.stringify({ error: msg, detail: txt }),
+              { status, headers: { "Content-Type": "application/json", ...corsHeaders } }
+            );
           }
 
           const data = await upstream.json();
-          const text = data?.choices?.[0]?.message?.content ?? "";
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
           return new Response(JSON.stringify({ text }), {
             status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
           });
+
         } catch (e) {
           return new Response(
             JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-            { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
+            { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
           );
         }
       },
