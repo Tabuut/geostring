@@ -1,7 +1,68 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/i18n";
 import GeoStringApp from "@/components/GeoStringApp";
+
+function useCountUp(target: number, duration = 1800) {
+  const [val, setVal] = useState(0);
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const start = performance.now();
+        const tick = (t: number) => {
+          const p = Math.min(1, (t - start) / duration);
+          setVal(Math.floor(target * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(tick);
+          else setVal(target);
+        };
+        requestAnimationFrame(tick);
+        obs.unobserve(el);
+      });
+    }, { threshold: 0.4 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target, duration]);
+  return { ref, val };
+}
+
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState<string>(ids[0]);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) setActive(e.target.id); });
+      },
+      { threshold: 0.4 },
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) obs.observe(el);
+    });
+    return () => obs.disconnect();
+  }, [ids.join(",")]);
+  return active;
+}
+
+function Ticker() {
+  const items = ["GEOSTRING", "منظومة هندسة الأوتار", "CNC POLAR ART", "AI POWERED", "STRING ART ENGINE"];
+  const loop = [...items, ...items, ...items, ...items];
+  return (
+    <div className="overflow-hidden border-b border-[var(--gold)]/10 bg-[var(--gold)]/[0.03] py-1.5">
+      <div className="inline-block whitespace-nowrap animate-[ticker_30s_linear_infinite] font-mono text-[10px] tracking-[1px] text-[var(--gold)]/60">
+        {loop.map((t, i) => (
+          <span key={i} className="mx-3">
+            {t}<span className="mx-1.5 text-[var(--gold)]/30">·</span>
+          </span>
+        ))}
+      </div>
+      <style>{`@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-50%) } }`}</style>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,6 +100,7 @@ function LangToggle({ className = "" }: { className?: string }) {
 function Nav() {
   const [open, setOpen] = useState(false);
   const { t } = useLang();
+  const active = useActiveSection(["hero", "presentation", "simulation", "specs", "team"]);
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
       <div className="container mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
@@ -47,9 +109,19 @@ function Nav() {
           <span className="font-display text-base sm:text-lg font-bold tracking-wider truncate">GEOSTRING<span className="text-[var(--gold)]">.</span></span>
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          {navLinks.map(l => (
-            <a key={l.href} href={l.href} className="hover:text-[var(--gold)] transition">{t(l.key)}</a>
-          ))}
+          {navLinks.map(l => {
+            const id = l.href.slice(1);
+            const isActive = active === id;
+            return (
+              <a
+                key={l.href}
+                href={l.href}
+                className={`relative pb-1 transition hover:text-[var(--gold)] ${isActive ? "text-[var(--gold)]" : ""} after:absolute after:bottom-0 after:right-0 after:h-px after:bg-[var(--gold)] after:transition-all ${isActive ? "after:w-full" : "after:w-0 hover:after:w-full"}`}
+              >
+                {t(l.key)}
+              </a>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
           <LangToggle />
@@ -127,21 +199,36 @@ function Hero() {
             </a>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 mt-16 max-w-xl">
-            {[
-              { v: "360°", l: t("hero.stat1") },
-              { v: "CNC", l: t("hero.stat2") },
-              { v: "1", l: t("hero.stat3") },
-            ].map((s) => (
-              <div key={s.l} className="border-r-2 border-[var(--gold)]/60 pr-4">
-                <div className="font-display text-3xl font-bold text-[var(--gold)]">{s.v}</div>
-                <div className="text-sm text-muted-foreground mt-1">{s.l}</div>
-              </div>
-            ))}
-          </div>
+          <HeroStats />
         </div>
       </div>
     </section>
+  );
+}
+
+function HeroStats() {
+  const { t } = useLang();
+  const polar = useCountUp(360);
+  const threads = useCountUp(8000);
+  return (
+    <div className="grid grid-cols-3 gap-6 mt-16 max-w-xl">
+      <div className="border-r-2 border-[var(--gold)]/60 pr-4">
+        <div className="font-display text-3xl font-bold text-[var(--gold)]">
+          <span ref={polar.ref}>{polar.val}</span>°
+        </div>
+        <div className="text-sm text-muted-foreground mt-1">{t("hero.stat1")}</div>
+      </div>
+      <div className="border-r-2 border-[var(--gold)]/60 pr-4">
+        <div className="font-display text-3xl font-bold text-[var(--gold)]">CNC</div>
+        <div className="text-sm text-muted-foreground mt-1">{t("hero.stat2")}</div>
+      </div>
+      <div className="border-r-2 border-[var(--gold)]/60 pr-4">
+        <div className="font-display text-3xl font-bold text-[var(--gold)]">
+          <span ref={threads.ref}>{threads.val.toLocaleString()}</span>
+        </div>
+        <div className="text-sm text-muted-foreground mt-1">{t("hero.stat3")}</div>
+      </div>
+    </div>
   );
 }
 
@@ -305,7 +392,7 @@ function Team() {
           {team.map((member, i) => (
             <div
               key={member.name}
-              className="group relative p-6 rounded-xl border border-border bg-card/60 hover:border-[var(--gold)]/60 transition overflow-hidden"
+              className="group relative p-6 rounded-xl border border-border bg-card/60 hover:border-[var(--gold)]/60 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(201,168,76,0.08)] transition-all duration-300 overflow-hidden"
             >
               <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-[var(--gold)]/10 group-hover:bg-[var(--gold)]/20 transition" />
               <div className="font-mono text-xs text-[var(--cyan)] mb-3">0{i + 1}</div>
@@ -353,6 +440,7 @@ function Index() {
   return (
     <div className="min-h-screen">
       <Nav />
+      <Ticker />
       <main>
         <Hero />
         <Presentation />

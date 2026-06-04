@@ -28,7 +28,7 @@ export const dict = {
   "hero.cta3": { ar: "العرض التقديمي", en: "Presentation" },
   "hero.stat1": { ar: "تحكم قطبي", en: "Polar Control" },
   "hero.stat2": { ar: "تحكم رقمي", en: "Digital Control" },
-  "hero.stat3": { ar: "خيط متصل", en: "Single Thread" },
+  "hero.stat3": { ar: "خيط كحد أقصى", en: "Max Threads" },
 
   // Presentation
   "pres.kicker": { ar: "02 — العرض التقديمي", en: "02 — PRESENTATION" },
