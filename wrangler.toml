@@ -1,0 +1,11 @@
+name = "geostring"
+compatibility_date = "2025-09-24"
+compatibility_flags = ["nodejs_compat"]
+main = "dist/server/index.mjs"
+assets = { directory = "dist/client" }
+
+no_bundle = true
+
+[[rules]]
+type = "ESModule"
+globs = ["**/*.mjs", "**/*.js"]
