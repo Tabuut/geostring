@@ -1,12 +1,11 @@
 name = "geostring"
-compatibility_date = "2024-11-01"
+compatibility_date = "2025-09-24"
 compatibility_flags = ["nodejs_compat"]
-main = "dist/server/server.js"
+main = "dist/server/index.mjs"
 assets = { directory = "dist/client" }
 
-[alias]
-"#tanstack-router-entry" = "./dist/server/assets/router-BiiIF6W-.js"
-"#tanstack-start-entry" = "./dist/server/assets/start-D4mdwD77.js"
-"#tanstack-start-plugin-adapters" = "./dist/server/assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js"
-"tanstack-start-manifest:v" = "./dist/server/assets/_tanstack-start-manifest_v-DEfUquzT.js"
-"tanstack-start-injected-head-scripts:v" = "./dist/server/assets/_tanstack-start-manifest_v-DEfUquzT.js"
+no_bundle = true
+
+[[rules]]
+type = "ESModule"
+globs = ["**/*.mjs", "**/*.js"]
