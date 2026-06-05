@@ -1229,7 +1229,7 @@ void loop(){
               maxWidth:380,
               width:"100%",
             }}>
-              {[["preview","◈ المعاينة"],["original","⊡ الأصلية"],["steps","≡ الخطوات"],["ai","✦ AI"]].map(([id,lbl])=>(
+              {[["preview","◈ المعاينة"],["original","⊡ الأصلية"],["sim3d","◉ 3D"],["steps","≡ الخطوات"],["ai","✦ AI"]].map(([id,lbl])=>(
                 <button key={id} onClick={()=>setTab(id)} className="gs-pill" style={{
                   flex:1,
                   background:tab===id?C.gold:"transparent",
