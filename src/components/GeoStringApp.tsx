@@ -1578,7 +1578,203 @@ function GenerationProgress({prog,liveCount,threadCnt,onStop}){
   );
 }
 
+/* ══════ 3D SIMULATION PANEL ══════ */
+function Sim3DPanel({seq,nails,shape,bgColor,threadColor,lineWeight}){
+  const SZ=600;
+  const [rotX,setRotX]=useState(-22);
+  const [rotY,setRotY]=useState(28);
+  const [auto,setAuto]=useState(true);
+  const [progress,setProgress]=useState(1); // 0..1 portion of threads shown
+  const [playing,setPlaying]=useState(false);
+  const [speed,setSpeed]=useState(8); // threads per frame
+  const dragRef=useRef(null);
+
+  // Auto rotation
+  useEffect(()=>{
+    if(!auto) return;
+    let raf, last=performance.now();
+    const tick=(t)=>{
+      const dt=(t-last)/1000; last=t;
+      setRotY(y=>(y+dt*14)%360);
+      raf=requestAnimationFrame(tick);
+    };
+    raf=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(raf);
+  },[auto]);
+
+  // Playback (draw progressively)
+  useEffect(()=>{
+    if(!playing||!seq.length) return;
+    let raf;
+    const tick=()=>{
+      setProgress(p=>{
+        const total=seq.length-1;
+        const nextCount=Math.min(total, Math.floor(p*total)+speed);
+        const np=nextCount/total;
+        if(np>=1){ setPlaying(false); return 1; }
+        return np;
+      });
+      raf=requestAnimationFrame(tick);
+    };
+    raf=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(raf);
+  },[playing,seq,speed]);
+
+  const onPointerDown=(e)=>{
+    setAuto(false);
+    dragRef.current={x:e.clientX,y:e.clientY,rx:rotX,ry:rotY};
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove=(e)=>{
+    if(!dragRef.current) return;
+    const d=dragRef.current;
+    setRotY(d.ry+(e.clientX-d.x)*0.45);
+    setRotX(Math.max(-80,Math.min(80, d.rx-(e.clientY-d.y)*0.45)));
+  };
+  const onPointerUp=()=>{ dragRef.current=null; };
+
+  const empty=!seq.length||!nails.length;
+  const shownCount=Math.max(1,Math.floor((seq.length-1)*progress));
+  // Build threads SVG path (subset for perf at very large counts)
+  const stride=seq.length>3000?2:1;
+  const lines=[];
+  if(!empty){
+    for(let i=1;i<=shownCount;i+=stride){
+      const a=nails[seq[i-1]], b=nails[seq[i]];
+      if(a&&b) lines.push(`M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
+    }
+  }
+  const pathD=lines.join("");
+
+  return(
+    <div style={{width:"100%",maxWidth:680,display:"flex",flexDirection:"column",gap:14,alignItems:"center"}} className="gs-up">
+      {/* Stage */}
+      <div
+        onPointerDown={empty?undefined:onPointerDown}
+        onPointerMove={empty?undefined:onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        style={{
+          width:"100%",aspectRatio:"1/1",maxWidth:560,
+          perspective:1400,
+          cursor:empty?"default":(dragRef.current?"grabbing":"grab"),
+          touchAction:"none",
+          background:`radial-gradient(circle at 50% 40%, rgba(240,192,96,.06), transparent 70%)`,
+          borderRadius:12,
+          border:`1px solid ${C.border}`,
+          position:"relative",
+          overflow:"hidden",
+        }}
+      >
+        {empty?(
+          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:C.muted,fontFamily:F.ar,fontSize:13,textAlign:"center",padding:20}}>
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style={{opacity:.55}}>
+              <ellipse cx="36" cy="36" rx="28" ry="10" stroke={C.gold} strokeWidth="1.4" opacity=".5"/>
+              <ellipse cx="36" cy="36" rx="28" ry="10" stroke={C.cyan} strokeWidth="1.2" opacity=".4" transform="rotate(60 36 36)"/>
+              <ellipse cx="36" cy="36" rx="28" ry="10" stroke={C.gold} strokeWidth="1.2" opacity=".4" transform="rotate(120 36 36)"/>
+              <circle cx="36" cy="36" r="3" fill={C.gold}/>
+            </svg>
+            <div style={{fontWeight:600,color:C.text}}>محاكاة ثلاثية الأبعاد</div>
+            <div style={{fontSize:11,fontFamily:F.mono,color:C.muted,letterSpacing:".08em"}}>قم بتوليد لوحتك أولاً لعرض المحاكاة</div>
+          </div>
+        ):(
+          <div style={{
+            position:"absolute",inset:0,
+            transformStyle:"preserve-3d",
+            transform:`rotateX(${rotX}deg) rotateY(${rotY}deg)`,
+            transition:dragRef.current||auto?"none":"transform .25s",
+          }}>
+            {/* Board back face */}
+            <div style={{
+              position:"absolute",inset:"8%",
+              transform:"translateZ(-12px)",
+              background:`linear-gradient(135deg, #1a1410, #0f0c08)`,
+              borderRadius:shape==="circle"?"50%":8,
+              boxShadow:"0 0 60px rgba(0,0,0,.7)",
+            }}/>
+            {/* Edge rim — multiple stacked layers to fake thickness */}
+            {[0,3,6,9].map(z=>(
+              <div key={z} style={{
+                position:"absolute",inset:"8%",
+                transform:`translateZ(${-z}px)`,
+                background:bgColor,
+                opacity:.92,
+                borderRadius:shape==="circle"?"50%":8,
+                border:`1px solid rgba(0,0,0,.35)`,
+              }}/>
+            ))}
+            {/* Top board face with threads */}
+            <svg viewBox={`0 0 ${SZ} ${SZ}`} style={{
+              position:"absolute",inset:"8%",
+              transform:"translateZ(2px)",
+              background:bgColor,
+              borderRadius:shape==="circle"?"50%":8,
+              boxShadow:`0 0 0 1px rgba(240,192,96,.18), inset 0 0 30px rgba(0,0,0,.18)`,
+            }}>
+              <path d={pathD} stroke={threadColor} strokeWidth={lineWeight*1.4} fill="none" strokeLinecap="round" opacity=".92"/>
+              {/* nails */}
+              {nails.map((n,i)=>(
+                <circle key={i} cx={n.x} cy={n.y} r="2" fill="#c9a35a" opacity=".75"/>
+              ))}
+            </svg>
+            {/* Soft shadow under board */}
+            <div style={{
+              position:"absolute",left:"15%",right:"15%",bottom:"4%",height:18,
+              background:"radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 70%)",
+              filter:"blur(6px)",
+              transform:"translateZ(-30px) rotateX(90deg)",
+            }}/>
+          </div>
+        )}
+      </div>
+
+      {/* Controls */}
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",width:"100%"}}>
+        <button onClick={()=>setAuto(a=>!a)} disabled={empty} style={ctrlBtn(auto)}>
+          {auto?"⏸ إيقاف الدوران":"↻ دوران تلقائي"}
+        </button>
+        <button onClick={()=>{ setPlaying(p=>!p); if(progress>=1) setProgress(0); }} disabled={empty} style={ctrlBtn(playing)}>
+          {playing?"⏸ إيقاف المحاكاة":"▶ محاكاة الخياطة"}
+        </button>
+        <button onClick={()=>{ setRotX(-22); setRotY(28); setProgress(1); setPlaying(false); }} disabled={empty} style={ctrlBtn(false)}>
+          ⟲ إعادة
+        </button>
+      </div>
+
+      {!empty&&(
+        <div style={{width:"100%",maxWidth:480,display:"flex",flexDirection:"column",gap:6}}>
+          <div style={{display:"flex",justifyContent:"space-between",fontFamily:F.mono,fontSize:10,color:C.muted}}>
+            <span>تقدم الخياطة</span>
+            <span style={{color:C.gold}}>{Math.floor(progress*(seq.length-1)).toLocaleString()} / {(seq.length-1).toLocaleString()}</span>
+          </div>
+          <input type="range" min="0" max="1000" value={Math.round(progress*1000)}
+            onChange={e=>{ setPlaying(false); setProgress(Number(e.target.value)/1000); }}
+            style={{width:"100%",accentColor:C.gold}}/>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginTop:4}}>
+            <span style={{fontFamily:F.mono,fontSize:10,color:C.muted}}>السرعة</span>
+            <input type="range" min="1" max="40" value={speed} onChange={e=>setSpeed(Number(e.target.value))} style={{flex:1,accentColor:C.cyan}}/>
+            <span style={{fontFamily:F.mono,fontSize:10,color:C.cyan,minWidth:36,textAlign:"right"}}>{speed}x</span>
+          </div>
+          <div style={{fontFamily:F.mono,fontSize:10,color:C.subtle,textAlign:"center",marginTop:6,letterSpacing:".06em"}}>
+            اسحب اللوحة بالماوس لتدويرها يدوياً
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+function ctrlBtn(active){
+  return{
+    height:36,padding:"0 14px",borderRadius:999,
+    background:active?C.gold:"transparent",
+    color:active?C.bg:C.text,
+    border:`1px solid ${active?C.gold:C.border}`,
+    fontFamily:F.ar,fontSize:12,fontWeight:600,cursor:"pointer",
+  };
+}
+
 /* ══════ STEPS PANEL ══════ */
+
 function StepsPanel({seq,nailCnt,shape,nails}){
   const [search,setSearch]=useState("");
   const [copied,setCopied]=useState(false);
