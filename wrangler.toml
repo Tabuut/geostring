@@ -10,10 +10,3 @@ assets = { directory = "dist/client" }
 "#tanstack-start-plugin-adapters" = "./dist/server/assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js"
 "tanstack-start-manifest:v" = "./dist/server/assets/_tanstack-start-manifest_v-DEfUquzT.js"
 "tanstack-start-injected-head-scripts:v" = "./dist/server/assets/_tanstack-start-manifest_v-DEfUquzT.js"
-
-# ✅ إضافة المتغيرات - يقرأ من Cloudflare Secrets
-[env.production]
-vars = { GEMINI_API_KEY = "" }
-
-[env.development]
-vars = { GEMINI_API_KEY = "" }
