@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/ai")({
 
           if (!apiKey) {
             return new Response(
-              JSON.stringify({ error: "GEMINI_API_KEY غير مضاف في Cloudflare." }),
+              JSON.stringify({ error: "GEMINI_API_KEY not configured in Cloudflare." }),
               { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
             );
           }
@@ -46,29 +46,24 @@ export const Route = createFileRoute("/api/public/ai")({
             temperature: temperature ?? 0.7,
             maxOutputTokens: maxOutputTokens ?? 1024,
           };
-
-          // ✅ تفعيل JSON mode إذا طُلب
           if (responseMimeType === "application/json") {
             generationConfig.responseMimeType = "application/json";
           }
 
-          const body = {
-            contents: [{ parts }],
-            generationConfig,
-          };
-
-          // ✅ النموذج الصحيح الذي يدعم الصور والـ JSON mode
-          const geminiUrl =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-          const upstream = await fetch(geminiUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
-            },
-            body: JSON.stringify(body),
-          });
+          const upstream = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey,
+              },
+              body: JSON.stringify({
+                contents: [{ parts }],
+                generationConfig,
+              }),
+            }
+          );
 
           if (!upstream.ok) {
             const txt = await upstream.text();
@@ -76,7 +71,7 @@ export const Route = createFileRoute("/api/public/ai")({
             let msg = "Gemini API error";
             if (status === 429) msg = "تجاوزت حد الطلبات. حاول بعد دقيقة.";
             else if (status === 401 || status === 403) msg = "مفتاح API غير صحيح.";
-            else if (status === 400) msg = "طلب غير صحيح. تحقق من الصورة.";
+            else if (status === 400) msg = "طلب غير صحيح.";
             return new Response(
               JSON.stringify({ error: msg, detail: txt }),
               { status, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -97,6 +92,7 @@ export const Route = createFileRoute("/api/public/ai")({
             status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
           });
+
         } catch (e) {
           return new Response(
             JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
