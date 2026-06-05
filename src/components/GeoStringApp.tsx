@@ -33,37 +33,29 @@ const F = {
 /* ══════════════════════════════════════════════
    AI (Gemini)
    ══════════════════════════════════════════════ */
- async function askGemini(prompt, b64 = null, opts = {}) {
-  const GEMINI_KEY = "AQ.Ab8RN6JpEb-P1EwRQdpt-S7rnqgev1buvMCGH_TijDIOHfi-YA";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-
-  const parts: any[] = [];
-  if (b64) {
-    parts.push({ inlineData: { mimeType: "image/jpeg", data: b64 } });
-  }
-  parts.push({ text: prompt });
-
-  const res = await fetch(url, {
+async function askGemini(prompt, b64 = null, opts = {}) {
+  const res = await fetch("/api/public/ai", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: {
-        temperature: opts.temperature ?? 0.7,
-        maxOutputTokens: opts.maxOutputTokens ?? 1024,
-      },
+      prompt,
+      imageBase64: b64 || undefined,
+      temperature: opts.temperature ?? 0.7,
+      maxOutputTokens: opts.maxOutputTokens ?? 1024,
     }),
   });
 
   const d = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const status = res.status;
-    if (status === 429) throw new Error("quota exceeded");
-    if (status === 403) throw new Error("API key invalid");
-    throw new Error(`AI error ${status}`);
+    const msg = d?.error || `AI error ${res.status}`;
+    if (res.status === 429) throw new Error("quota exceeded");
+    if (res.status === 403) throw new Error("API key invalid");
+    if (res.status === 500 && /not configured/i.test(msg))
+      throw new Error("GEMINI_API_KEY غير مضاف في Cloudflare Workers → Settings → Variables");
+    throw new Error(msg);
   }
-  return d?.candidates?.[0]?.content?.parts?.[0]?.text || "لم أتمكن من الحصول على رد.";
- }
+  return d?.text || "لم أتمكن من الحصول على رد.";
+}
 
 async function analyzeImage(b64, lockedHints = []) {
   const lockBlock = lockedHints.length
