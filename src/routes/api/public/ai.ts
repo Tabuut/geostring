@@ -12,11 +12,11 @@ export const Route = createFileRoute("/api/public/ai")({
       OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
         try {
-          const apiKey = process.env.GEMINI_API_KEY?.trim();
+          const apiKey = process.env.OPENROUTER_API_KEY?.trim();
 
           if (!apiKey) {
             return new Response(
-              JSON.stringify({ error: "GEMINI_API_KEY not configured in Cloudflare." }),
+              JSON.stringify({ error: "OPENROUTER_API_KEY not configured." }),
               { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
             );
           }
@@ -31,47 +31,43 @@ export const Route = createFileRoute("/api/public/ai")({
             );
           }
 
-          const parts: any[] = [];
+          const content: any[] = [{ type: "text", text: prompt }];
           if (imageBase64 && typeof imageBase64 === "string") {
-            parts.push({
-              inlineData: {
-                mimeType: "image/jpeg",
-                data: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-              },
+            content.unshift({
+              type: "image_url",
+              image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
             });
           }
-          parts.push({ text: prompt });
 
-          const generationConfig: any = {
+          const body: any = {
+            model: "google/gemini-2.0-flash:free",
+            messages: [{ role: "user", content }],
             temperature: temperature ?? 0.7,
-            maxOutputTokens: maxOutputTokens ?? 1024,
+            max_tokens: maxOutputTokens ?? 1024,
           };
+
           if (responseMimeType === "application/json") {
-            generationConfig.responseMimeType = "application/json";
+            body.response_format = { type: "json_object" };
           }
 
-          const upstream = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-goog-api-key": apiKey,
-              },
-              body: JSON.stringify({
-                contents: [{ parts }],
-                generationConfig,
-              }),
-            }
-          );
+          const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://geostring.com",
+              "X-Title": "Geostring",
+            },
+            body: JSON.stringify(body),
+          });
 
           if (!upstream.ok) {
             const txt = await upstream.text();
             const status = upstream.status;
-            let msg = "Gemini API error";
+            let msg = "AI error";
             if (status === 429) msg = "تجاوزت حد الطلبات. حاول بعد دقيقة.";
-            else if (status === 401 || status === 403) msg = "مفتاح API غير صحيح.";
-            else if (status === 400) msg = "طلب غير صحيح.";
+            else if (status === 401) msg = "مفتاح API غير صحيح.";
+            else if (status === 402) msg = "نفذ الرصيد المجاني.";
             return new Response(
               JSON.stringify({ error: msg, detail: txt }),
               { status, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -79,7 +75,7 @@ export const Route = createFileRoute("/api/public/ai")({
           }
 
           const data = await upstream.json();
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+          const text = data?.choices?.[0]?.message?.content ?? "";
 
           if (!text) {
             return new Response(
