@@ -1305,6 +1305,7 @@ void loop(){
               </div>
             )}
 
+            {tab==="sim3d"&&<Sim3DPanel seq={seq} nails={nails} shape={shape} bgColor={bgColor} threadColor={threadColor} lineWeight={lineWeight}/>}
             {tab==="steps"&&<StepsPanel seq={seq} nailCnt={nailCnt} shape={shape} nails={nails}/>}
             {tab==="ai"&&<AiPanel aiLoad={aiLoad} aiRes={aiRes} aiSuggestion={aiSuggestion} applySuggestion={applySuggestion} generate={generate} chat={chat} chatIn={chatIn} setChatIn={setChatIn} chatBusy={chatBusy} sendChat={sendChat} onKey={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}}} chatEndRef={chatEndRef} hasImg={!!image} runAI={runAI} lockedParams={lockedParams} before={beforeSnapshot.current}/>}
           </div>
