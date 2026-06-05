@@ -49,9 +49,9 @@ async function askGemini(prompt, b64 = null, opts = {}) {
   if (!res.ok) {
     const msg = d?.error || `AI error ${res.status}`;
     if (res.status === 429) throw new Error("quota exceeded");
-    if (res.status === 403) throw new Error("API key invalid");
-    if (res.status === 500 && /not configured/i.test(msg))
-      throw new Error("GEMINI_API_KEY غير مضاف في Cloudflare Workers → Settings → Variables");
+    if (res.status === 401 || res.status === 403) throw new Error(msg || "API key invalid");
+    if (res.status === 500 && /GEMINI_API_KEY|not configured|غير مضاف/i.test(msg))
+      throw new Error(msg);
     throw new Error(msg);
   }
   return d?.text || "لم أتمكن من الحصول على رد.";
@@ -795,6 +795,7 @@ void loop(){
       const msg=String(e?.message||"");
       let errText="⚠️ خطأ غير متوقع — حاول مرة أخرى";
       if(msg.includes("quota")||msg.includes("429")) errText="⚠️ تجاوزت الحد اليومي لـ Gemini AI";
+      else if(msg.includes("API Key")||msg.includes("GEMINI_API_KEY")||msg.includes("AIza")||msg.includes("غير صحيح")) errText=`⚠️ ${msg}`;
       else if(msg.includes("network")||msg.includes("fetch")||msg.includes("Failed")) errText="⚠️ تحقق من اتصالك بالإنترنت";
       setAiRes(errText);
     }
