@@ -42,6 +42,7 @@ async function askGemini(prompt, b64 = null, opts = {}) {
       imageBase64: b64 || undefined,
       temperature: opts.temperature ?? 0.7,
       maxOutputTokens: opts.maxOutputTokens ?? 1024,
+      responseMimeType: opts.responseMimeType,
     }),
   });
 
