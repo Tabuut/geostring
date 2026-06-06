@@ -105,7 +105,7 @@ async function analyzeImage(b64, lockedHints = []) {
 • استخدم دائماً خيط داكن + خلفية فاتحة (إلا لصور مضيئة جداً على خلفية سوداء).
 • اضمن: minGap < nails/6 و threads/nails بين 12 و 25.
 
-النطاقات: nails 80-400، threads 500-8000، minGap 5-60، lineWeight 0.05-0.40، contrast 0.5-3.0، brightness -0.4 إلى 0.4.`, b64, { temperature: 0.25, maxOutputTokens: 1400, responseMimeType: "application/json" });
+النطاقات: nails 80-400، threads 500-8000، minGap 5-60، lineWeight 0.05-0.40، contrast 0.5-3.0، brightness -0.4 إلى 0.4.`, b64, { temperature: 0.25, maxOutputTokens: 3000, responseMimeType: "application/json" });
 }
 
 function extractJSON(txt){
@@ -790,7 +790,7 @@ void loop(){
         setAiRes(summary);
         setTimeout(()=>{ try{ generateRef.current?.(); }catch{} }, 200);
       } else {
-        setAiRes(res||"⚠️ لم يتمكن الذكاء الاصطناعي من إنتاج إعدادات صالحة. حاول مرة أخرى.");
+        setAiRes("⚠️ لم يتمكن الذكاء الاصطناعي من تحليل الصورة بشكل صحيح. حاول مرة أخرى.");
       }
     }catch(e){
       const msg=String(e?.message||"");
