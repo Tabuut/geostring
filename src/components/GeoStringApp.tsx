@@ -797,6 +797,7 @@ void loop(){
       if(msg.includes("quota")||msg.includes("429")) errText="⚠️ تجاوزت الحد اليومي لـ Gemini AI";
       else if(msg.includes("API Key")||msg.includes("GEMINI_API_KEY")||msg.includes("AIza")||msg.includes("غير صحيح")) errText=`⚠️ ${msg}`;
       else if(msg.includes("network")||msg.includes("fetch")||msg.includes("Failed")) errText="⚠️ تحقق من اتصالك بالإنترنت";
+      else if(msg) errText=`⚠️ ${msg}`;
       setAiRes(errText);
     }
     setAiLoad(false);
