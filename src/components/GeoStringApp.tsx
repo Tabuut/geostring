@@ -42,6 +42,7 @@ async function askGemini(prompt, b64 = null, opts = {}) {
       imageBase64: b64 || undefined,
       temperature: opts.temperature ?? 0.7,
       maxOutputTokens: opts.maxOutputTokens ?? 1024,
+      responseMimeType: opts.responseMimeType,
     }),
   });
 
@@ -814,7 +815,10 @@ void loop(){
       const b64=src&&image?toB64(src):null;
       const reply=await askGemini(ctx2+msg,b64);
       setChat([...nc,{r:"ai",t:reply}]);
-    }catch{setChat([...nc,{r:"ai",t:"عذراً، حدث خطأ. حاول مجدداً."}]);}
+    }catch(e){
+      const msg=String(e?.message||"").trim();
+      setChat([...nc,{r:"ai",t:msg?`⚠️ ${msg}`:"عذراً، حدث خطأ. حاول مجدداً."}]);
+    }
     setChatBusy(false);
   },[chatIn,chat,chatBusy,nailCnt,threadCnt,shape,threadColor,image]);
 

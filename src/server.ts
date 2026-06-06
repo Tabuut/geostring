@@ -7,6 +7,20 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+const runtimeSecretKeys = ["GEMINI_API_KEY", "OPENROUTER_API_KEY"] as const;
+
+function applyCloudflareRuntimeSecrets(env: unknown) {
+  if (!env || typeof env !== "object") return;
+
+  const bindings = env as Record<string, unknown>;
+  for (const key of runtimeSecretKeys) {
+    const value = bindings[key];
+    if (typeof value === "string" && value.trim()) {
+      process.env[key] = value.trim();
+    }
+  }
+}
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -69,6 +83,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      applyCloudflareRuntimeSecrets(env);
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
