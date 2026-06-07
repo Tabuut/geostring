@@ -1600,7 +1600,7 @@ function Sim3DPanel({seq,nails,shape,bgColor,threadColor,lineWeight}){
     };
   },[hasData,seq,nails,shape,bgColor,threadColor,lineWeight]);
 
-  const base = "https://stringphotokr.dothome.co.kr/indexmaking.html";
+  const base = "/stringphoto/indexmaking.html";
   const refUrl = useMemo(()=>{
     if(!payload) return base;
     try{ return `${base}#geostring=${encodeURIComponent(JSON.stringify(payload))}`; }
@@ -1628,7 +1628,7 @@ function Sim3DPanel({seq,nails,shape,bgColor,threadColor,lineWeight}){
 
       <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",width:"100%"}}>
         <button onClick={openInNewTab} style={ctrlBtn(true)}>
-          ⤴ فتح العارض الأصلي في نافذة جديدة
+          ⤴ فتح العارض في نافذة جديدة
         </button>
         <button
           onClick={()=>{ try{ navigator.clipboard.writeText(refUrl); }catch{} }}
@@ -1645,8 +1645,8 @@ function Sim3DPanel({seq,nails,shape,bgColor,threadColor,lineWeight}){
         fontFamily:F.ar,fontSize:11,color:C.muted,lineHeight:1.8,textAlign:"center",
       }}>
         {hasData
-          ? <>تم تمرير بيانات المسامير ({nails.length}) وتسلسل الخيط ({(seq.length-1).toLocaleString()} خط) إلى العارض عبر <span style={{color:C.gold,fontFamily:F.mono}}>#hash</span>.</>
-          : <>العارض المرجعي ثلاثي الأبعاد جاهز. قم بتوليد لوحتك لتمرير بياناتك إليه تلقائياً.</>
+          ? <>تم تمرير بيانات المسامير ({nails.length}) وتسلسل الخيط ({(seq.length-1).toLocaleString()} خط) إلى العارض المحلي ثلاثي الأبعاد.</>
+          : <>العارض ثلاثي الأبعاد يعمل محلياً من داخل المنصة. قم بتوليد لوحتك لتمرير بياناتك إليه تلقائياً.</>
         }
       </div>
     </div>
