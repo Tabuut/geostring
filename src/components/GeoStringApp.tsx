@@ -1585,105 +1585,70 @@ function GenerationProgress({prog,liveCount,threadCnt,onStop}){
 
 /* ══════ 3D SIMULATION PANEL (Reference site embed) ══════ */
 function Sim3DPanel({seq,nails,shape,bgColor,threadColor,lineWeight}){
-  const empty=!seq.length||!nails.length;
+  const hasData = seq.length>0 && nails.length>0;
 
-  // Build payload compatible with the reference site (stringphotokr).
-  // Reference reads from localStorage keys: pinsdata, data, SIZE, framecolor, pincovercolor.
-  // We mirror those into the URL hash so the reference page (or a fork of it) can rehydrate.
   const payload = useMemo(()=>{
-    if(empty) return null;
+    if(!hasData) return null;
     const cdiv = nails.length;
-    // degrees for circular nail layout (reference format)
     const deg = Array.from({length:cdiv},(_,i)=>+(i*360/cdiv).toFixed(2));
     return {
-      pdata: seq,            // thread sequence (nail indexes)
-      cdiv,                  // total nails
-      deg,                   // degrees
+      pdata: seq, cdiv, deg,
       pinsdata: nails.map(n=>({x:+n.x.toFixed(2),y:+n.y.toFixed(2)})),
-      SIZE: 600,
-      shape,
-      framecolor: bgColor,
-      pincovercolor: threadColor,
-      threadColor,
-      lineWeight,
+      SIZE: 600, shape,
+      framecolor: bgColor, pincovercolor: threadColor,
+      threadColor, lineWeight,
     };
-  },[empty,seq,nails,shape,bgColor,threadColor,lineWeight]);
+  },[hasData,seq,nails,shape,bgColor,threadColor,lineWeight]);
 
+  const base = "https://stringphotokr.dothome.co.kr/indexmaking.html";
   const refUrl = useMemo(()=>{
-    const base = "https://stringphotokr.dothome.co.kr/indexmaking.html";
     if(!payload) return base;
-    try{
-      const encoded = encodeURIComponent(JSON.stringify(payload));
-      return `${base}#geostring=${encoded}`;
-    }catch{ return base; }
+    try{ return `${base}#geostring=${encodeURIComponent(JSON.stringify(payload))}`; }
+    catch{ return base; }
   },[payload]);
 
-  // Try to also push to localStorage of the reference site via window.open + postMessage fallback.
-  const openInNewTab=()=>{
-    if(!payload) return;
-    window.open(refUrl, "_blank", "noopener,noreferrer");
-  };
+  const openInNewTab=()=>window.open(refUrl, "_blank", "noopener,noreferrer");
 
   return(
-    <div style={{width:"100%",maxWidth:760,display:"flex",flexDirection:"column",gap:14,alignItems:"center"}} className="gs-up">
-      {empty?(
-        <div style={{
-          width:"100%",aspectRatio:"16/10",maxWidth:680,
-          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          gap:12,color:C.muted,fontFamily:F.ar,fontSize:13,textAlign:"center",padding:20,
-          borderRadius:12,border:`1px dashed ${C.border}`,
-          background:`radial-gradient(circle at 50% 40%, rgba(240,192,96,.06), transparent 70%)`,
-        }}>
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" style={{opacity:.55}}>
-            <ellipse cx="36" cy="36" rx="28" ry="10" stroke={C.gold} strokeWidth="1.4" opacity=".5"/>
-            <ellipse cx="36" cy="36" rx="28" ry="10" stroke={C.cyan} strokeWidth="1.2" opacity=".4" transform="rotate(60 36 36)"/>
-            <ellipse cx="36" cy="36" rx="28" ry="10" stroke={C.gold} strokeWidth="1.2" opacity=".4" transform="rotate(120 36 36)"/>
-            <circle cx="36" cy="36" r="3" fill={C.gold}/>
-          </svg>
-          <div style={{fontWeight:600,color:C.text}}>محاكاة ثلاثية الأبعاد — العارض المرجعي</div>
-          <div style={{fontSize:11,fontFamily:F.mono,color:C.muted,letterSpacing:".08em"}}>
-            قم بتوليد لوحتك أولاً لعرض المجسم في العارض الأصلي
-          </div>
-        </div>
-      ):(
-        <>
-          <div style={{
-            width:"100%",aspectRatio:"4/3",maxWidth:720,
-            borderRadius:12,overflow:"hidden",
-            border:`1px solid ${C.border}`,
-            background:"#000",position:"relative",
-          }}>
-            <iframe
-              src={refUrl}
-              title="String Photo 3D Viewer"
-              style={{width:"100%",height:"100%",border:0,display:"block"}}
-              allow="accelerometer; gyroscope; xr-spatial-tracking; fullscreen"
-              referrerPolicy="no-referrer"
-            />
-          </div>
+    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:14,alignItems:"center"}} className="gs-up">
+      <div style={{
+        width:"100%",height:"min(85vh, 900px)",minHeight:520,
+        borderRadius:12,overflow:"hidden",
+        border:`1px solid ${C.border}`,
+        background:"#000",position:"relative",
+      }}>
+        <iframe
+          src={refUrl}
+          title="String Photo 3D Viewer"
+          style={{width:"100%",height:"100%",border:0,display:"block"}}
+          allow="accelerometer; gyroscope; xr-spatial-tracking; fullscreen"
+          referrerPolicy="no-referrer"
+        />
+      </div>
 
-          <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",width:"100%"}}>
-            <button onClick={openInNewTab} style={ctrlBtn(true)}>
-              ⤴ فتح العارض الأصلي في نافذة جديدة
-            </button>
-            <button
-              onClick={()=>{ try{ navigator.clipboard.writeText(refUrl); }catch{} }}
-              style={ctrlBtn(false)}
-            >
-              ⧉ نسخ رابط المجسم
-            </button>
-          </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",width:"100%"}}>
+        <button onClick={openInNewTab} style={ctrlBtn(true)}>
+          ⤴ فتح العارض الأصلي في نافذة جديدة
+        </button>
+        <button
+          onClick={()=>{ try{ navigator.clipboard.writeText(refUrl); }catch{} }}
+          style={ctrlBtn(false)}
+        >
+          ⧉ نسخ رابط المجسم
+        </button>
+      </div>
 
-          <div style={{
-            width:"100%",maxWidth:680,padding:"10px 14px",
-            borderRadius:8,border:`1px dashed ${C.border}`,
-            background:"rgba(240,192,96,.04)",
-            fontFamily:F.ar,fontSize:11,color:C.muted,lineHeight:1.8,textAlign:"center",
-          }}>
-            يتم إعادة توجيه العارض إلى رابط المجسم الأصلي مع تمرير بيانات المسامير ({nails.length}) وتسلسل الخيط ({(seq.length-1).toLocaleString()} خط) عبر الـ <span style={{color:C.gold,fontFamily:F.mono}}>#hash</span>.
-          </div>
-        </>
-      )}
+      <div style={{
+        width:"100%",maxWidth:760,padding:"10px 14px",
+        borderRadius:8,border:`1px dashed ${C.border}`,
+        background:"rgba(240,192,96,.04)",
+        fontFamily:F.ar,fontSize:11,color:C.muted,lineHeight:1.8,textAlign:"center",
+      }}>
+        {hasData
+          ? <>تم تمرير بيانات المسامير ({nails.length}) وتسلسل الخيط ({(seq.length-1).toLocaleString()} خط) إلى العارض عبر <span style={{color:C.gold,fontFamily:F.mono}}>#hash</span>.</>
+          : <>العارض المرجعي ثلاثي الأبعاد جاهز. قم بتوليد لوحتك لتمرير بياناتك إليه تلقائياً.</>
+        }
+      </div>
     </div>
   );
 }
